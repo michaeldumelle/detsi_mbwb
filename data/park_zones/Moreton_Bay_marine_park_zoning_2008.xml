@@ -1,0 +1,650 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<MD_Metadata xmlns="http://www.isotc211.org/2005/gmd" xmlns:gco="http://www.isotc211.org/2005/gco" xmlns:gmd="http://www.isotc211.org/2005/gmd" xmlns:gml="http://www.opengis.net/gml" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.isotc211.org/2005/gmd http://www.isotc211.org/2005/gmd/gmd.xsd      http://www.opengis.net/gml http://www.isotc211.org/2005/gml/gml.xsd      http://www.w3.org/1999/xlink http://www.isotc211.org/2005/xlink/xlinks.xsd">
+    <fileIdentifier>
+        <gco:CharacterString>{7FD7398A-EA5C-4D10-9DFC-5C0A92ACF95E}</gco:CharacterString>
+    </fileIdentifier>
+    <language>
+        <gco:CharacterString>eng</gco:CharacterString>
+    </language>
+    <characterSet>
+        <MD_CharacterSetCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#MD_CharacterSetCode" codeListValue="utf8"/>
+    </characterSet>
+    <parentIdentifier>
+        <gco:CharacterString>{33E8D274-F420-40F2-B45A-3D4F6D88C659}</gco:CharacterString>
+    </parentIdentifier>
+    <hierarchyLevel>
+        <MD_ScopeCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#MD_ScopeCode" codeListValue="dataset">dataset</MD_ScopeCode>
+    </hierarchyLevel>
+    
+    <contact>
+        <CI_ResponsibleParty id="metadataContact">
+            <organisationName>
+                <gco:CharacterString>Department of the Environment, Tourism, Science and Innovation</gco:CharacterString>
+            </organisationName>
+            <positionName>
+                <gco:CharacterString>Manager, Marine Policy</gco:CharacterString>
+            </positionName>
+            <contactInfo>
+                <CI_Contact>
+                    <phone>
+                        <CI_Telephone>
+                            <voice>
+                                <gco:CharacterString>+61 9999 999 999</gco:CharacterString>
+                            </voice>
+                        </CI_Telephone>
+                    </phone>
+                    <address>
+                        <CI_Address>
+                            <deliveryPoint>
+                                <gco:CharacterString>400 George St</gco:CharacterString>
+                            </deliveryPoint>
+                            <city>
+                                <gco:CharacterString>Brisbane</gco:CharacterString>
+                            </city>
+                            <administrativeArea>
+                                <gco:CharacterString>Queensland</gco:CharacterString>
+                            </administrativeArea>
+                            <postalCode>
+                                <gco:CharacterString>4001</gco:CharacterString>
+                            </postalCode>
+                            <country>
+                                <gco:CharacterString>Australia</gco:CharacterString>
+                            </country>
+                            <electronicMailAddress>
+                                <gco:CharacterString>Marine.Policy@des.qld.gov.au</gco:CharacterString>
+                            </electronicMailAddress>
+                        </CI_Address>
+                    </address>
+                    <onlineResource>
+                        <CI_OnlineResource>
+                            <linkage>
+                                <URL>http://www.des.qld.gov.au</URL>
+                            </linkage>
+                        </CI_OnlineResource>
+                    </onlineResource>
+                </CI_Contact>
+            </contactInfo>
+            <role>
+                <CI_RoleCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_RoleCode" codeListValue="pointOfContact">pointOfContact</CI_RoleCode>
+            </role>
+        </CI_ResponsibleParty>
+    </contact>
+    <dateStamp>
+        <gco:Date>2010-09-21</gco:Date>
+    </dateStamp>
+    <metadataStandardName>
+        <gco:CharacterString>ISO 19115:2005, ANZLIC ISO 1.1</gco:CharacterString>
+    </metadataStandardName>
+    <metadataStandardVersion>
+        <gco:CharacterString>QGIS</gco:CharacterString>
+    </metadataStandardVersion>
+    <referenceSystemInfo>
+        <MD_ReferenceSystem id="coordRefSystem">
+            <referenceSystemIdentifier>
+                <RS_Identifier>
+                    <authority>
+                        <CI_Citation>
+                            <title>
+                                <gco:CharacterString>EPSG Geodetic Parameter
+                                Dataset</gco:CharacterString>
+                            </title>
+                            <date>
+                                <CI_Date>
+                                    <date>
+                                        <gco:Date>2007-07-16</gco:Date>
+                                    </date>
+                                    <dateType>
+                                        <CI_DateTypeCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_DateTypeCode" codeListValue="revision">revision </CI_DateTypeCode>
+                                    </dateType>
+                                </CI_Date>
+                            </date>
+                            <edition>
+                                <gco:CharacterString>Version 6.13</gco:CharacterString>
+                            </edition>
+                        </CI_Citation>
+                    </authority>
+                    <code>
+                        <gco:CharacterString>EPSG:4938</gco:CharacterString>
+                    </code>
+                </RS_Identifier>
+            </referenceSystemIdentifier>
+        </MD_ReferenceSystem>
+    </referenceSystemInfo>
+    
+    
+    
+    <identificationInfo>
+        <MD_DataIdentification>
+            <citation>
+                <CI_Citation>
+                    <title>
+                        <gco:CharacterString>Moreton Bay marine park zoning 2008</gco:CharacterString>
+                    </title>
+                    <alternateTitle>
+                        <gco:CharacterString>Moreton Bay marine park zoning 2008</gco:CharacterString>
+                    </alternateTitle>
+                    <date>
+                        <CI_Date>
+                            <date>
+                                <gco:Date>2008-10-19</gco:Date>
+                            </date>
+                            <dateType>
+                                <CI_DateTypeCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_DateTypeCode" codeListValue="publication"/>
+                            </dateType>
+                        </CI_Date>
+                    </date>
+                    
+                    
+                    
+                    <citedResponsibleParty>
+                        <CI_ResponsibleParty id="resourceCustodian">
+                            <organisationName>
+                                <gco:CharacterString>Department of the Environment, Tourism, Science and Innovation</gco:CharacterString>
+                            </organisationName>
+                            <positionName>
+                                <gco:CharacterString>Deputy Director-General, Queensland Parks and Wildlife Service</gco:CharacterString>
+                            </positionName>
+                            <contactInfo>
+                                <CI_Contact>
+                                                                
+                                </CI_Contact>
+                            </contactInfo>
+                            <role>
+                                <CI_RoleCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_RoleCode" codeListValue="custodian">custodian</CI_RoleCode>
+                            </role>
+                        </CI_ResponsibleParty>
+                    </citedResponsibleParty>
+                    <citedResponsibleParty>
+                        <CI_ResponsibleParty id="resourceOwner">
+                            <organisationName>
+                                <gco:CharacterString>Department of the Environment, Tourism, Science and Innovation</gco:CharacterString>
+                            </organisationName>
+                            <positionName>
+                                <gco:CharacterString>Deputy Director-General, Queensland Parks and Wildlife Service</gco:CharacterString>
+                            </positionName>
+                            <role>
+                                <CI_RoleCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_RoleCode" codeListValue="owner">owner</CI_RoleCode>
+                            </role>
+                        </CI_ResponsibleParty>
+                    </citedResponsibleParty>
+                    
+                    
+                    
+                    <presentationForm>
+                        <CI_PresentationFormCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_PresentationFormCode" codeListValue="mapDigital">mapDigital</CI_PresentationFormCode>
+                    </presentationForm>
+                    
+                </CI_Citation>
+            </citation>
+
+
+            <abstract>
+                <gco:CharacterString>This dataset represents the zoning from the Marine Parks (Moreton Bay) Zoning Plan 2008 (which comes into effect 1 March 2009).</gco:CharacterString>
+            </abstract>
+            <purpose>
+                <gco:CharacterString>If Purpose is required, please contact the Data Custodian.</gco:CharacterString>
+            </purpose>
+            <status>
+                <MD_ProgressCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#MD_ProgressCode" codeListValue="completed">completed</MD_ProgressCode>
+            </status>
+            <pointOfContact>
+                <CI_ResponsibleParty>
+                    <organisationName>
+                        <gco:CharacterString>Department of the Environment, Tourism, Science and Innovation</gco:CharacterString>
+                    </organisationName>
+                    <positionName>
+                        <gco:CharacterString>Manager, Marine Policy</gco:CharacterString>
+                    </positionName>
+                    <contactInfo>
+                        <CI_Contact>
+                            <phone>
+                                <CI_Telephone>
+                                    <voice>
+                                        <gco:CharacterString>+61 9999 999 999</gco:CharacterString>
+                                    </voice>
+                                </CI_Telephone>
+                            </phone>
+                            <address>
+                                <CI_Address>
+                                    <deliveryPoint>
+                                        <gco:CharacterString>400 George St</gco:CharacterString>
+                                    </deliveryPoint>
+                                    <city>
+                                        <gco:CharacterString>Brisbane</gco:CharacterString>
+                                    </city>
+                                    <administrativeArea>
+                                        <gco:CharacterString>Queensland</gco:CharacterString>
+                                    </administrativeArea>
+                                    <postalCode>
+                                        <gco:CharacterString>4001</gco:CharacterString>
+                                    </postalCode>
+                                    <country>
+                                        <gco:CharacterString>Australia</gco:CharacterString>
+                                    </country>
+                                    <electronicMailAddress>
+                                        <gco:CharacterString>Marine.Policy@des.qld.gov.au</gco:CharacterString>
+                                    </electronicMailAddress>
+                                </CI_Address>
+                            </address>
+                            <onlineResource>
+                                <CI_OnlineResource>
+                                    <linkage>
+                                        <URL>http://www.des.qld.gov.au</URL>
+                                    </linkage>
+                                </CI_OnlineResource>
+                            </onlineResource>                            
+                        </CI_Contact>
+                    </contactInfo>
+                    <role>
+                        <CI_RoleCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_RoleCode" codeListValue="pointOfContact"/>
+                    </role>
+                </CI_ResponsibleParty>
+            </pointOfContact>
+            <resourceMaintenance>
+                <MD_MaintenanceInformation>
+                    <maintenanceAndUpdateFrequency>
+                        <MD_MaintenanceFrequencyCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#MD_MaintenanceFrequencyCode" codeListValue="asNeeded"/>
+                    </maintenanceAndUpdateFrequency>
+                    
+                </MD_MaintenanceInformation>
+            </resourceMaintenance>
+            
+            <resourceFormat>
+                <MD_Format>
+                    <name>
+                        <gco:CharacterString>SHP, TAB, FGDB, KMZ, GPKG</gco:CharacterString>
+                    </name>
+                    <version>
+                        <gco:CharacterString>1</gco:CharacterString>
+                    </version>
+                </MD_Format>
+            </resourceFormat>
+            <descriptiveKeywords>
+                <MD_Keywords id="ThemeAnzlicThesaurus">
+                    <keyword>
+                        <gco:CharacterString>BOUNDARIES</gco:CharacterString>
+                    </keyword>
+                    <type>
+                        <MD_KeywordTypeCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#MD_KeywordTypeCode" codeListValue="theme">theme</MD_KeywordTypeCode>
+                    </type>
+                    <thesaurusName>
+                        <CI_Citation>
+                            <title>
+                                <gco:CharacterString>ANZLIC Search Words</gco:CharacterString>
+                            </title>
+                            <date>
+                                <CI_Date>
+                                    <date gco:nilReason="unknown"/>
+                                    <dateType>
+                                        <CI_DateTypeCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_DateTypeCode" codeListValue="publication">publication</CI_DateTypeCode>
+                                    </dateType>
+                                </CI_Date>
+                            </date>
+                        </CI_Citation>
+                    </thesaurusName>
+                </MD_Keywords>
+            </descriptiveKeywords>
+            
+            
+            
+            <resourceConstraints>
+                <MD_SecurityConstraints>
+                    
+                    <classification>
+                        <MD_ClassificationCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#MD_ClassificationCode" codeListValue="unclassified">unclassified</MD_ClassificationCode>
+                    </classification>
+                    <classificationSystem>
+                        <gco:CharacterString>Resource Access Level</gco:CharacterString>
+                    </classificationSystem>
+                </MD_SecurityConstraints>
+            </resourceConstraints>
+            <resourceConstraints>
+                <MD_LegalConstraints>
+                    <useLimitation>
+                        <gco:CharacterString>&amp;copy The State of Queensland 2025</gco:CharacterString>
+                    </useLimitation>
+                    <useConstraints>
+                        <MD_RestrictionCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#MD_RestrictionCode" codeListValue="copyright">copyright</MD_RestrictionCode>
+                    </useConstraints>
+                </MD_LegalConstraints>
+            </resourceConstraints>
+            <resourceConstraints>
+                <MD_LegalConstraints>
+                    <useLimitation>
+                        <gco:CharacterString>This material is licensed under a &lt;a rel="license" href="https://creativecommons.org/licenses/by/4.0/"&gt;Creative Commons - Attribution 4.0 International&lt;/a&gt; licence.&lt;br /&gt; &lt;a rel="license" href="https://creativecommons.org/licenses/by/4.0/"&gt;&lt;img alt="Creative Commons License" title="Creative Commons - Attribution 4.0 International" style="border: 0;" src="https://licensebuttons.net/l/by/4.0/88x31.png" /&gt;&lt;/a&gt;&lt;br /&gt;Department of the Environment, Tourism, Science and Innovation requests attribution in the following manner:&lt;br /&gt; &amp;copy The State of Queensland 2025</gco:CharacterString>
+                    </useLimitation>
+                    <useConstraints>
+                        <MD_RestrictionCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#MD_RestrictionCode" codeListValue="license">license</MD_RestrictionCode>
+                    </useConstraints>
+                </MD_LegalConstraints>
+            </resourceConstraints>
+            
+            
+            
+            
+            <aggregationInfo>
+                <MD_AggregateInformation>
+                    <aggregateDataSetIdentifier>
+                        <MD_Identifier>
+                            <code>
+                                <gco:CharacterString>QPWS_SIS.MORETON_BAY_ZONING</gco:CharacterString>
+                            </code>
+                        </MD_Identifier>
+                    </aggregateDataSetIdentifier>
+                    <associationType>
+                        <DS_AssociationTypeCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#DS_AssociationTypeCode" codeListValue="source">source</DS_AssociationTypeCode>
+                    </associationType>
+                </MD_AggregateInformation>
+            </aggregationInfo>
+            <spatialRepresentationType>
+                <MD_SpatialRepresentationTypeCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#MD_SpatialRepresentationTypeCode" codeListValue="vector">vector</MD_SpatialRepresentationTypeCode>
+            </spatialRepresentationType>
+            
+            <language>
+                <gco:CharacterString>eng</gco:CharacterString>
+            </language>
+            <characterSet gco:nilReason="unknown"/>
+            <topicCategory>
+                <MD_TopicCategoryCode>boundaries</MD_TopicCategoryCode>
+            </topicCategory>
+            <environmentDescription>
+                <gco:CharacterString>Spatial Information Resource</gco:CharacterString>
+            </environmentDescription>
+            <extent>
+                <EX_Extent>
+                    <geographicElement>
+                        <EX_GeographicBoundingBox>
+                            <westBoundLongitude>
+                                <gco:Decimal>153.010147</gco:Decimal>
+                            </westBoundLongitude>
+                            <eastBoundLongitude>
+                                <gco:Decimal>153.611605</gco:Decimal>
+                            </eastBoundLongitude>
+                            <southBoundLatitude>
+                                <gco:Decimal>-27.933261</gco:Decimal>
+                            </southBoundLatitude>
+                            <northBoundLatitude>
+                                <gco:Decimal>-26.802236</gco:Decimal>
+                            </northBoundLatitude>
+                        </EX_GeographicBoundingBox>
+                    </geographicElement>
+                    
+                    
+                    <temporalElement>
+                        <EX_TemporalExtent>
+                            <extent>
+                                <gml:TimePeriod frame="#ISO-8601" gml:id="timePeriod1">
+                                    <gml:beginPosition>2007-12-03</gml:beginPosition>
+                                    <gml:endPosition>2009-03-01</gml:endPosition>
+                                </gml:TimePeriod>
+                            </extent>
+                        </EX_TemporalExtent>
+                    </temporalElement>
+                </EX_Extent>
+            </extent>
+            
+        </MD_DataIdentification>
+    </identificationInfo>
+    <distributionInfo>
+        <MD_Distribution>
+            <distributionFormat>
+                <MD_Format id="DownloadService">
+                    <name>
+                        <gco:CharacterString>Queensland Spatial Catalogue</gco:CharacterString>
+                    </name>
+                    <version gco:nilReason="inapplicable"/>
+                    <specification>
+                        <gco:CharacterString>Download Service</gco:CharacterString>
+                    </specification>
+                    <formatDistributor>
+                        <MD_Distributor>
+                            <distributorContact>
+                                <CI_ResponsibleParty>
+                                    <organisationName>
+                                        <gco:CharacterString>Department of the Environment, Tourism, Science and Innovation</gco:CharacterString>
+                                    </organisationName>
+                                    <role>
+                                        <CI_RoleCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_RoleCode" codeListValue="resourceProvider">resourceProvider</CI_RoleCode>
+                                    </role>
+                                </CI_ResponsibleParty>
+                            </distributorContact>
+                            <distributionOrderProcess>
+                                <MD_StandardOrderProcess>
+                                    
+                                    <orderingInstructions>
+                                        <gco:CharacterString>Open the Queensland Spatial Catalogue (QSpatial). Select the large SEARCH button. Select one of the four filter options provided and then the further options within the filter. The resultant search is then displayed. Select your record and complete the order.</gco:CharacterString>
+                                    </orderingInstructions>
+                                </MD_StandardOrderProcess>
+                            </distributionOrderProcess>
+                            <distributorTransferOptions>
+                                <MD_DigitalTransferOptions>
+                                    <onLine>
+                                        <CI_OnlineResource id="dns1">
+                                            <linkage>
+                                                <URL>http://qldspatial.information.qld.gov.au/catalogue/</URL>
+                                            </linkage>
+                                        </CI_OnlineResource>
+                                    </onLine>
+                                </MD_DigitalTransferOptions>
+                            </distributorTransferOptions>
+                        </MD_Distributor>
+                    </formatDistributor>
+                </MD_Format>
+            </distributionFormat>
+            
+            <distributionFormat>
+                <MD_Format id="ProprietaryWebServices">
+                    <name>
+                        <gco:CharacterString>Moreton Bay zoning</gco:CharacterString>
+                    </name>
+                    <version gco:nilReason="unknown"/>
+                    <formatDistributor>
+                        <MD_Distributor>
+                            <distributorContact>
+                                <CI_ResponsibleParty>
+                                    <organisationName>
+                                        <gco:CharacterString>Department of the Environment, Tourism, Science and Innovation</gco:CharacterString>
+                                    </organisationName>
+                                    <role>
+                                        <CI_RoleCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_RoleCode" codeListValue="resourceProvider">resourceProvider</CI_RoleCode>
+                                    </role>
+                                </CI_ResponsibleParty>
+                            </distributorContact>
+                            <distributionOrderProcess>
+                                <MD_StandardOrderProcess>
+                                    <fees>
+                                        <gco:CharacterString>Nil</gco:CharacterString>
+                                    </fees>
+                                    <orderingInstructions>
+                                        <gco:CharacterString>For use in desktop and web applications capable of connecting to ArcGIS REST map service endpoints.</gco:CharacterString>
+                                    </orderingInstructions>
+                                </MD_StandardOrderProcess>
+                            </distributionOrderProcess>
+                            <distributorTransferOptions>
+                                <MD_DigitalTransferOptions>
+                                    <onLine>
+                                        <CI_OnlineResource id="pws1">
+                                            <linkage>
+                                                <URL>https://spatial-gis.information.qld.gov.au/arcgis/rest/services/Environment/ParksMarineProtectedAreas/MapServer/2</URL>
+                                            </linkage>
+                                            <protocol>
+                                                <gco:CharacterString>WWW:LINK-1.0-http--link</gco:CharacterString>
+                                            </protocol>
+                                            <applicationProfile>
+                                                <gco:CharacterString>ArcGIS REST API</gco:CharacterString>
+                                            </applicationProfile>
+                                            <name>
+                                                <gco:CharacterString>Zone identification</gco:CharacterString>
+                                            </name>
+                                            <description>
+                                                <gco:CharacterString>This dataset represents the zoning from the Marine Parks (Moreton Bay) Zoning Plan 2008 (which comes into effect 1 March 2009).</gco:CharacterString>
+                                            </description>
+                                        </CI_OnlineResource>
+                                    </onLine>
+                                </MD_DigitalTransferOptions>
+                            </distributorTransferOptions>
+                        </MD_Distributor>
+                    </formatDistributor>
+                </MD_Format>
+            </distributionFormat>
+            <distributionFormat>
+                <MD_Format id="GptBehaviour">
+                    <name>
+                        <gco:CharacterString>downloadableData</gco:CharacterString>
+                    </name>
+                    <version>
+                        <gco:CharacterString>10.0</gco:CharacterString>
+                    </version>
+                    <specification>
+                        <gco:CharacterString>ESRI ArcGIS Server Geoportal Extension Content Type</gco:CharacterString>
+                    </specification>
+                </MD_Format>
+            </distributionFormat>
+            <distributor>
+                <MD_Distributor id="distributorContact1">
+                    <distributorContact>
+                        <CI_ResponsibleParty>
+                            <organisationName>
+                                <gco:CharacterString>Department of the Environment, Tourism, Science and Innovation</gco:CharacterString>
+                            </organisationName>
+                            <positionName>
+                                <gco:CharacterString>opendata@npsr.qld.gov.au</gco:CharacterString>
+                            </positionName>
+                            <role>
+                                <CI_RoleCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_RoleCode" codeListValue="distributor">distributor</CI_RoleCode>
+                            </role>
+                        </CI_ResponsibleParty>
+                    </distributorContact>
+                    
+                    <distributorFormat>
+                        <MD_Format>
+                            <name>
+                                <gco:CharacterString>From the Queensland Spatial Catalogue available as ESRI Shape file SHP, MapInfo Tab file TAB, ESRI file geodatabase FGDB, Google file KMZ, and Geopackage version 1.0, 1.1, or 1.2 file GPKG</gco:CharacterString>
+                            </name>
+                            <version gco:nilReason="inapplicable"/>
+                        </MD_Format>
+                    </distributorFormat>
+                    <distributorTransferOptions>
+                        <MD_DigitalTransferOptions>
+                            <transferSize>
+                                <gco:Real>1</gco:Real>
+                            </transferSize>
+                            <onLine>
+                                <CI_OnlineResource>
+                                    <linkage>
+                                        <URL>http://qldspatial.information.qld.gov.au/catalogue/custom/search.page?q=%22Moreton Bay marine park zoning 2008%22</URL>
+                                    </linkage>
+                                </CI_OnlineResource>
+                            </onLine>
+                            
+                        </MD_DigitalTransferOptions>
+                    </distributorTransferOptions>
+                </MD_Distributor>
+            </distributor>
+            <transferOptions>
+                <MD_DigitalTransferOptions id="download">
+                    <onLine>
+                        <CI_OnlineResource>
+                            <linkage>
+                                <URL/>
+                            </linkage>
+                            <function>
+                                <CI_OnLineFunctionCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_OnLineFunctionCode" codeListValue="download">download</CI_OnLineFunctionCode>
+                            </function>
+                        </CI_OnlineResource>
+                    </onLine>
+                </MD_DigitalTransferOptions>
+            </transferOptions>
+        </MD_Distribution>
+    </distributionInfo>
+    <dataQualityInfo>
+        <DQ_DataQuality>
+            <scope>
+                <DQ_Scope>
+                    <level>
+                        <MD_ScopeCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#MD_ScopeCode" codeListValue="dataset">dataset</MD_ScopeCode>
+                    </level>
+                    
+                </DQ_Scope>
+            </scope>
+            <report>
+                <DQ_CompletenessOmission>
+                    <result>
+                        <DQ_ConformanceResult>
+                            <specification gco:nilReason="missing"/>
+                            <explanation>
+                                <gco:CharacterString>This dataset is complete.</gco:CharacterString>
+                            </explanation>
+                            <pass gco:nilReason="inapplicable"/>
+                        </DQ_ConformanceResult>
+                    </result>
+                </DQ_CompletenessOmission>
+            </report>
+            <report>
+                <DQ_ConceptualConsistency>
+                    <result>
+                        <DQ_ConformanceResult>
+                            <specification gco:nilReason="missing"/>
+                            <explanation>
+                                <gco:CharacterString>The dataset has a high degree of adherence to logical rules of data structure, attribution and relationships.</gco:CharacterString>
+                            </explanation>
+                            <pass gco:nilReason="inapplicable"/>
+                        </DQ_ConformanceResult>
+                    </result>
+                </DQ_ConceptualConsistency>
+            </report>
+            <report>
+                <DQ_AbsoluteExternalPositionalAccuracy>
+                    <result>
+                        <DQ_ConformanceResult>
+                            <specification gco:nilReason="missing"/>
+                            <explanation>
+                                <gco:CharacterString>Methodology to develop an updated Moreton Bay Marine Park boundary.An updated marine park boundary was developed as part of the review process. This boundary was based on the description found in Schedule 1 of the Marine Parks (Declaration) Regulation 2006 and the best possible datasets available. The datasets used to construct the marine park boundary include:1) Digital cadastral database (DCDB)2) EPA's highest astronomical tide (HAT) dataset (derived from regional ecosystem mapping)3) EPA's Estates (national parks etc.)4) EPA's Designated downstream limits (DDL)5) NRW's mean high water springs (MHWS) coastline (derived from orthophotography)6) NRW's 2002 orthophotos 0.6m pixel size7) EPA's 2006 Spot imagery 2.5m pixel size (panchromatic sharpened)If more detail on horizontal accuracy is required, please contact the Data Custodian.</gco:CharacterString>
+                            </explanation>
+                            <pass gco:nilReason="inapplicable"/>
+                        </DQ_ConformanceResult>
+                    </result>
+                </DQ_AbsoluteExternalPositionalAccuracy>
+            </report>
+            <report>
+                <DQ_NonQuantitativeAttributeAccuracy>
+                    <result>
+                        <DQ_ConformanceResult>
+                            <specification gco:nilReason="missing"/>
+                            <explanation>
+                                <gco:CharacterString>All dataset attributes are complete and are 100% accurate.--------------------------------Dataset field and attributes are as below.Zone_id: Unique identifier for each zone within the Moreton Bay Marine Park Zoning Plan. Attribute abbreviations are:1) MNP, marine national park2) CPZ, conservation park zone3) HPZ, habitat protection zone4) GUZ, general use zoneZone_Name: Location name for each zone. Zone_Type: Used to specify the type of zone used in the Moreton Bay Marine Park Zoning Plan.Attribute values are:1) Marine national park zone2) Conservation park zone3) Habitat protection zone4) General use zonesSee the 'supplemental information' section for zoning type details.</gco:CharacterString>
+                            </explanation>
+                            <pass gco:nilReason="inapplicable"/>
+                        </DQ_ConformanceResult>
+                    </result>
+                </DQ_NonQuantitativeAttributeAccuracy>
+            </report>
+            
+            
+            
+            
+            <lineage>
+                <LI_Lineage>
+                    <statement>
+                        <gco:CharacterString>This dataset has been developed as part of the Moreton Bay Marine Park zoning plan review process.The method for analysing more than 200 datasets used a process of continual review and refinement to ensure all social, economic, cultural and environmental information was considered against the series of 13 Scientific Guiding Principles - provided by an independent Expert Advisory Panel - being followed for the zoning plan review.The placement of zones was directly influenced by environmental (or "bio-physical") requirements as well as existing activities in the marine park. Mapping these existing activities was a major task during the first "information-gathering" stage of the zoning plan review, used to highlight areas where increased protection could not be achieved because significant economic costs would be passed on to the community or because of existing environmental conditions. Examples of these activities include shipping channels, boat ramps, anchorages, dredge disposal sites, sand extraction sites, major fishing grounds (both recreational and commercial) and aquaculture sites. The remaining areas were then investigated, using the Scientific Guiding Principles, to determine how each of the 16 broad-scale habitat types in the marine park could be best protected while limiting the impacts to users. DERM analysed this information to produce 35 candidate areas for higher protection, which were used to consult with key stakeholders at a series of workshops. Through these workshops, stakeholders provided information about how each candidate area would affect their particular interests. The workshops also provided stakeholder groups with the opportunity to propose alternative or modified candidate areas that they believed delivered better environmental or social outcomes. DERM used this feedback, together with the Scientific Guiding Principles, to add and remove candidate areas and to redefine the areas' boundaries to improve environmental outcomes or reduce the impacts on existing user groups as far as possible. The refined list of candidate areas was then analysed to determine the percentage of each habitat type that was represented in marine national park (green) zones. The remaining area of the marine park was then reviewed to determine what level of zoning would best connect the proposed marine national park (green) zones or protect ecological processes while minimising the impacts on users. The outcome of this data collection and analysis process was the draft zoning plan, which was released for formal public consultation on 3 December 2007 until 7 March 2008. The draft zoning plan proposed that 15 per cent of the marine park be protected in marine national park (green) zones. This included protecting all broad-scale habitat types in the marine park in these zones, with particular emphasis on habitats that support threatened species, such as turtles and dugong. More than 8000 submissions were received in response to the draft zoning plan. Information from these submissions was then assessed and considered against the Scientific Guiding Principles used for the review to develop the final zoning plan - the Marine Parks (Moreton Bay) Zoning Plan 2008. A total of 55 boundary changes were made to different zones in response to public submissions to ensure that the impacts on marine park users are minimised to the greatest possible extent.The Marine Parks (Moreton Bay) Zoning Plan 2008 comes into effect on 1 March 2009. For more information please visit www.derm.qld.gov.au</gco:CharacterString>
+                    </statement>
+                    
+                    
+                </LI_Lineage>
+            </lineage>
+        </DQ_DataQuality>
+    </dataQualityInfo>
+    <metadataConstraints>
+        <MD_SecurityConstraints>
+            <useLimitation>
+                <gco:CharacterString>Public</gco:CharacterString>
+            </useLimitation>
+            <classification>
+                <MD_ClassificationCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#MD_ClassificationCode" codeListValue="unclassified"/>
+            </classification>
+            <classificationSystem>
+                <gco:CharacterString>Metadata Access Level</gco:CharacterString>
+            </classificationSystem>
+        </MD_SecurityConstraints>
+    </metadataConstraints>
+</MD_Metadata>

@@ -1,0 +1,183 @@
+---
+title: "DETSI Report"
+author: "EP Consulting and Dumelle Consulting"
+format:
+  html:
+    toc: true
+execute: 
+  echo: false
+  message: false
+  warning: false
+  error: true
+embed-resources: true
+editor_options: 
+  chunk_output_type: console
+bibliography: references.bib
+---
+
+```{r}
+# loading software
+library(tidyverse)
+library(here)
+library(ranger)
+library(sf)
+library(knitr)
+library(broom)
+library(spmodel)
+library(pdp)
+library(emmeans)
+library(janitor)
+```
+
+
+# Background
+
+Accurately characterizing drivers and resilience of seagrass cover is essential to improving the ecological health of the Moreton Bay and Wide Bay ecosystems. Over the past few decades, various scientific efforts have informed our current understanding of trends, behaviors, and flood responses of seagrass cover in both Moreton Bay and Wide Bay [@preen1995flood; @mcmahon2005herbicide; @york2022post] [@abal1996seagrass; @udy1997growth; @samper2016organic; @ovsyanikova2026spatial] as well as Australia more widely [@kilminster2015unravelling; @gilby2018seagrass; @o2018seagrass]. Remote sensing has offered new capabilities for seagrass cover mapping [@roelfsema2009integrated], while innovative statistical approaches have offered novel methods for studying resilience at site-specific scales [@gilby2023drivers]. Our work contributes to this body of literature by applying spatially explicit statistical models [@cressie1993statistics] to study seagrass cover drivers, resilience, and recovery in both Moreton Bay and Wide Bay. Specifically, we provide and contextualize answers to four specific research questions, applicable to both Moreton Bay and Wide Bay:
+
+1. Can we identify water quality covariates that act as triggers for seagrass cover management responses? Are these triggers different based on whether they result from a specific event (e.g., flood) or are ambient?
+2. Did seagrass cover improve after the flood event(s)? If so, how and where?
+3. Can we identify site-specific resilience indicators, which describe where recovery is likely to be enhanced or impeded?
+4. What factors contribute to seagrass resilience?
+
+The spatially explicit statistical models (i.e., spatial models) we used to answer these research questions are related to commonly used linear and generalized linear models but incorporate _spatial dependence_ Spatial dependence measures how similar two sites are based on their distance. Formally, we can build spatial dependence directly into spatial models by leveraging Tobler's First Law of Geography [@tobler1970computer], which states succinctly that "nearby sites tend to be more similar than distant sites". Not only is this intuitive based on "first principles" perspective, but spatial models to provide many advantages for modeling spatial data compared to models that assume independence among observations (i.e., nonspatial models). First, nonspatial models tend to underestimate uncertainty, yielding covariate standard errors and p-values for covariates that are too small and corresponding confidence intervals that are too narrow. Second, spatial models improve prediction at unsampled locations by borrowing strength from nearby observations, yielding more precise predictions and corresponding standard errors that vary by location. Third, spatial models decompose model error into separate spatial and nonspatial components, informing residual and resilience structure in ways that nonspatial models cannot. Fourth, spatial models can provide ecologically meaningful insight into the spatial dependence structure of the process, informing relationships among measured and unmeasured variables as well as future sampling plans. @zimmerman2024spatial provide a thorough review of spatial models for ecological and environmental data, providing more detail and justification for the claims made above.
+
+Spatial models offer many benefits over commonly used machine learning algorithms like random forests [@breiman2001random; @cutler2007random; @fox2017assessing; @james2017introduction; @kuhn2022tidy]. First, traditional machine learning algorithms do not incorporate spatial dependence and, by consequence, often perform worse than spatial models at characterizing important covariates and predicting at unobserved locations [@fox2020comparing; @saha2023random; @heaton2025scalable]. Second, machine learning algorithms struggle to quantify uncertainty in a principled manner, something spatial models excel at. Third, covariate inference is more straightforward using spatial models, as they naturally provide p-values that enable structured testing of hypotheses. Fourth, spatial models provide a rich set of diagnostics like leverage and Cook's distances [@montgomery2021introduction], quantities not generally defined for machine learning algorithms.
+
+Spatial linear models
+
+Block Kriging
+
+Spatial GLMs
+
+
+
+# Moreton Bay
+
+## The Data
+
+```{r}
+#| label: clean-mb
+
+# read in raw geopackage
+dat <- read_sf(here("data", "MB_03-31-2026.gpkg")) %>%
+  st_transform(crs = 3113)
+
+# create new sediment type variable
+dat <- dat %>%
+  mutate(sed.type = case_when(
+    sed.type %in% c("M", "MR") ~ "Mud",
+    sed.type %in% c("SM", "RSM") ~ "Sandy.Mud",
+    sed.type %in% c("MS", "MSR") ~ "Muddy.Sand",
+    sed.type %in% c("S", "G", "SR") ~ "Sand",
+    sed.type %in% c("R", "RM", "RMS", "RS", "SH") ~ "Rock",
+    TRUE ~ "Other"
+  ))  %>%
+  # create month, year, growing season variables
+  mutate(month = str_sub(date, 6, 7)) %>%
+  mutate(year = str_sub(date, 1, 4)) %>%
+  mutate(growing = if_else(month %in% 9:12, "Growing", "Not-Growing"))
+
+var_names <- colnames(dat)
+
+# define variables to keep
+vars <-  c("sed.type", "depth.range", "temp.90d.mn", "turb.90d.mn",
+           "turb.fld.mn", "ds.flood", "sal.fld.mn", "fy", "month", "year",
+           "dom.spp", "ehmp.subzone", "ehmp.zone", "zone.type",
+           "site.id", "nearest.river", "dist.km", "growing")
+
+# remove data with missing eReefs variables
+dat <- dat %>%
+  dplyr::select(c(total.cover, all_of(vars))) %>%
+  na.omit()
+
+# add days since flood, years since flood, an after flood effect,
+# a decayign flood effect, and truncate the turbidity and salinity flood 
+# variables to be zero before the flood
+dat <- dat %>%
+  mutate(ds.flood = if_else(ds.flood < 0, 0, ds.flood)) %>%
+  mutate(yr.flood = ds.flood / 365) %>%
+  mutate(after.flood = if_else(ds.flood > 0, 1, 0)) %>%
+  mutate(yr.flood.recip = if_else(yr.flood == 0, 0, 1/yr.flood^2)) %>%
+  mutate(turb.fld.mn = if_else(yr.flood <= 0, 0, turb.fld.mn)) %>%
+  mutate(sal.fld.mn = if_else(yr.flood <= 0, 0, sal.fld.mn))
+
+# read in bay shapefiles
+bay <- read_sf(here("data", "Moreton_Bay_marine_park_zoning_2008.shp")) %>%
+  st_transform(crs = 3113)
+```
+
+We started with 11,796 seagrass cover observations in Moreton Bay across three financial years (2020-2021, 2022-2023, and 2023-2024). eReefs data [@steven2019ereefs] with modeled water quality covariates related to turbidity and salinity were only available at 8,364 observaations. Because one of our research questions involved connecting water quality covariates to management actions, we proceed with this subset of 8,364 observations for modeling. Of the 8,364 observations, 1,995 were in 2020-2021 (pre-flood), 4,036 were in 2022-2023, and 2,333 were in 2023-2024 (@tbl-n_fy_mb). Total cover is a percentage that ranges from 0 (no seagrass) to 100 (seagrass entirely contained in an area). @fig-cover_fy_mb shows total cover by financial year throughout the Bay. Total cover tends to be largest along the eastern shoreline of the Bay and lowest in the middle of the Bay. @fig-cover_fy_mb also reveals that 2022-2023 had by far the most sampling in the middle of the Bay.
+
+```{r}
+#| label: tbl-n_fy_mb
+#| fig-cap: "Total seagrass cover in Moreton Bay by financial year."
+dat %>%
+  tabyl(fy) %>%
+  adorn_totals(where = "row") %>%
+  adorn_pct_formatting() %>%
+  kable(
+    col.names = c("Financial Year", "Sample Size", "Percent (of Total)"),
+    format.args = list(big.mark = ",")
+  )
+```
+
+
+```{r}
+#| label: fig-cover_fy_mb
+#| fig-cap: "Total seagrass cover in Moreton Bay by financial year."
+dat <- dat %>%
+  arrange(total.cover, fy)
+ggplot(dat) +
+  geom_sf(data = bay, fill = "white") +
+  geom_sf(data = dat, aes(color = total.cover), size = 0.8) +
+  scale_color_viridis_c(name = "Cover") +
+  facet_wrap(~ fy) +
+  theme_bw(base_size = 14) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+```
+
+We considered for modeling several water quality and geographic covariates. @tbl-wq_vars_mb summarize these water quality variables, which included both ambient and flood-related metrics related to turbidity, salinity, and temperature. The "Variable" column indicates the water quality variable turbidity, salinity, or temperature. The "Flood" variable indicates whether the measurement corresponds to a flood variable or not. The "Period" variable indicates the prior period (in days) relative to sampling or indicates whether the variable corresponds to a flood event. The "Type" column is the type of statistic, either a mean, minimum, maximum, number of days above (or below) a cutoff during "Period", or a maximum spell (i.e., duration) above (or below) a cutoff during "Period". The "Included" variable indicates whether the variable was included as a covariate in the final spatial model.
+
+```{r}
+#| label: tbl-wq_vars_mb
+#| fig-cap: "Moreton Bay water quality variables considered for modeling."
+turb_vars <- tibble(
+  Variable = rep("Turbidity", 20),
+  Flood = c(rep("No", 12), rep("Yes", 8)),
+  Period = c(rep(c("7", "30", "90"), times = 4), rep("Flood", 8)),
+  Type = c(rep("Mean", 3), rep("Above", 9), rep("Above", 3), rep("Duration", 3), c("Mean", "Max")),
+  Cutoff = c(rep("NA", 3), rep(c("3", "5", "6"), each = 3), rep(c("3", "5", "6"), times = 2), rep("NA", 2))
+) %>%
+  mutate(Included = if_else(row_number() %in% c(3, 19), "Yes", "No"))
+sal_vars <- tibble(
+  Variable = rep("Salinity", 17),
+  Flood = c(rep("No", 9), rep("Yes", 8)),
+  Period = c(rep(c("7", "30", "90"), times = 3), rep("Flood", 8)),
+  Type = c(rep("Below", 9), rep("Below", 3), rep("Duration", 3), c("Mean", "Min")),
+  Cutoff = c(rep(c("20", "25", "30"), each = 3), rep(c("20", "25", "30"), times = 2), rep("NA", 2))
+) %>%
+  mutate(Included = "No")
+temp_vars <- tibble(
+  Variable = rep("Temperature", 3),
+  Flood = c(rep("No", 3)),
+  Period = c(rep(c("7", "30", "90"), times = 1)),
+  Type = c(rep("Mean", 3)),
+  Cutoff = c(rep("NA", 3))
+) %>%
+  mutate(Included = if_else(row_number() %in% c(3), "Yes", "No"))
+vars <- bind_rows(turb_vars, sal_vars, temp_vars)
+vars %>%
+  kable()
+```
+
+# Wide Bay
+
+
+## Outstanding Questions
+
+* What are the units for the turbidity/salinity/temperature variables?
+
+## References
+
+::: {#refs}
+:::

@@ -1,0 +1,531 @@
+
+
+
+
+  
+
+
+
+
+
+
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+
+	
+	
+	<html lang="en">
+<head>
+</head>
+<body>
+	<div id="gptMainWrap">
+		<div id="gptBody">
+			
+			<table id="cmPlPgdPageBody" class="pageBody" cellpadding="0" cellspacing="0" summary="This table is for design purposes only.">
+<tbody>
+<tr>
+<td><span id="cmPlPgpPageBody">
+					
+
+
+
+
+
+
+
+
+<script type="text/javascript">
+  var gptMapConfig = new GptMapConfig();
+  gptMapConfig.mapServiceURL = "https://server.arcgisonline.com/arcgis/rest/services/World_Street_Map/MapServer";
+  gptMapConfig.mapServiceType = "dynamic";
+  gptMapConfig.geometryServiceURL = "https://spatial-gis.information.qld.gov.au/arcgis/rest/services/Utilities/Geometry/GeometryServer";
+  gptMapConfig.locatorURL = "https://spatial-gis.information.qld.gov.au/arcgis/rest/services/Location/QldCompositeLocator/GeocodeServer";
+  gptMapConfig.locatorSingleFieldParameter = "SingleLine";
+  gptMapConfig.locatorGraphicURL = "/catalogue/catalog/images/pushpin_red.gif";
+  gptMapConfig.mapVisibleLayers = "[]";
+</script>
+
+
+<form id="mdDetails" name="mdDetails" method="post" action="/catalogue/custom/viewMetadataDetails.page;jsessionid=04BC77DBC8874312CF345DDA018B2DD3" class="mdDetails" enctype="application/x-www-form-urlencoded">
+<input type="hidden" name="mdDetails" value="mdDetails" />
+
+
+<script type="text/javascript">
+
+function MddMap() {
+  var _gptMap = null;
+  var _gptInpEnv = null;
+  
+  this.initialize = function initialize() {
+    var config = gptMapConfig;
+    config.mapElementId = "interactiveMap";
+    config.mapToolbarId = "mdDetails:mapToolbar";
+        
+    var elForm = mddFindForm();
+    if ((elForm != null) && (typeof(mdeEnvelopeIds) != 'undefined') && (mdeEnvelopeIds != null)) {
+      var sPfx = elForm.id+":";
+      config.inputEnvelopeXMinId = sPfx+mdeEnvelopeIds[0];
+      config.inputEnvelopeYMinId = sPfx+mdeEnvelopeIds[1];
+      config.inputEnvelopeXMaxId = sPfx+mdeEnvelopeIds[2];
+      config.inputEnvelopeYMaxId = sPfx+mdeEnvelopeIds[3];
+      var el = document.getElementById(config.inputEnvelopeXMinId);
+      if (el != null) el.value = el.innerHTML;
+      el = document.getElementById(config.inputEnvelopeYMinId);
+      if (el != null) el.value = el.innerHTML;
+      el = document.getElementById(config.inputEnvelopeXMaxId);
+      if (el != null) el.value = el.innerHTML;
+      el = document.getElementById(config.inputEnvelopeYMaxId);
+      if (el != null) el.value = el.innerHTML;
+    }
+      
+    _gptMap = new GptMap();
+    dojo.connect(_gptMap,"onMapLoaded",this,"onMapLoaded");
+
+    _gptInpEnv = new GptInputEnvelope();
+    _gptInpEnv.initialize(config,_gptMap);
+
+    _gptMap.initialize(config);
+  }
+
+  this.onMapLoaded = function() {
+      if (_gptInpEnv != null) {
+        _gptInpEnv.highlightInputEnvelope();
+        setTimeout(dojo.hitch(_gptInpEnv,"zoomToInputEnvelope"),1000);
+        _gptMap.getAgsMap().disableMapNavigation();
+        _gptMap.getAgsMap().disablePan();
+        _gptMap.getAgsMap().disableClickRecenter();
+        _gptMap.getAgsMap().disableDoubleClickZoom();
+        _gptMap.getAgsMap().disableRubberBandZoom();
+        _gptMap.getAgsMap().disableScrollWheelZoom();
+        _gptMap.getAgsMap().disableShiftDoubleClickZoom();
+        _gptMap.getAgsMap().hidePanArrows();
+        _gptMap.getAgsMap().hideZoomSlider();
+      }
+  }
+  
+  this.reposition = function reposition() {
+    if (_gptMap != null) _gptMap.reposition();
+  }
+};
+
+
+function mddFindForm(sBaseName) {
+  var elForm = null;
+  var aForms = document.getElementsByTagName("form");
+  if (aForms != null) {
+    if (sBaseName == null) sBaseName = "mdDetails";
+    for (var i=0;i<aForms.length;i++) {
+      var el = aForms[i];
+      if (el && el.id && (el.id.indexOf(sBaseName) != -1)) {
+        elForm = el;
+        break;
+      }
+    }
+  }
+  return elForm;
+};
+
+
+var mddMap = new MddMap();;
+if (typeof(dojo) != 'undefined') {
+  dojo.addOnLoad(mddMapInit);
+}
+
+function mddMapInit() {
+  var toolbar = dojo.byId("mdDetails:mapToolbar");
+  if (toolbar!=null) toolbar.style.display="none";
+  var elMap = document.getElementById("interactiveMap");
+  if (elMap != null) mddMap.initialize();
+  dojo.connect(window,"onresize",mddMap,"reposition");
+};
+
+
+function mddOnSectionClicked(sSectionId) {
+  var elForm = mddFindForm();
+  if (elForm != null) {
+    var bDisplay = true;
+    var sFolder = "/catalogue/catalog/images/";
+    var sSrc = sFolder+"section_open.gif";
+    var elImg = document.getElementById(elForm.id+":"+sSectionId+"-img");
+    if (elImg != null) {
+      if (elImg.src.indexOf("section_open.gif") != -1) {
+        sSrc = sFolder+"section_closed.gif";
+        bDisplay = false;
+      }
+      elImg.src = sSrc;
+      var elChk = document.getElementById(elForm.id+":"+sSectionId+"-chk");
+      if (elChk != null) elChk.checked = bDisplay;
+    }
+    var el = document.getElementById(elForm.id+":"+sSectionId+"-body");
+
+	if (el != null) {
+	  if (bDisplay) el.style.display = "block"; else el.style.display = "none";
+	  mddMap.reposition();
+	}      
+  }
+}
+
+</script>
+
+
+<span id="mdDetails:xsltBasedDetails"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>Moreton Bay marine park zoning 2008</title><meta content="text/html; charset=UTF-8" http-equiv="Content-type"/><style type="text/css">
+                            h1{
+                                font-family:Arial, Verdana, Helvetica, sans-serif;
+                                font-weight:bold;
+                                color:#333333;
+                                font-size:140%;
+                                border-bottom:2px solid #CCCCCC;
+                            }
+                            h2{
+                                font-family:Arial, Verdana, Helvetica, sans-serif;
+                                font-weight:bold;
+                                color:#333333;
+                                font-size:120%;
+                            }
+                            h3{
+                                font-family:Arial, Verdana, Helvetica, sans-serif;
+                                font-weight:bold;
+                                color:#333333;
+                                font-size:110%;
+                            }
+                            
+                            body{
+                                font-family:Verdana, Arial, Helvetica, sans-serif;
+                                font-size:10pt;
+                                line-height:16pt;
+                                color:#333333;
+                                padding-right:10%;
+                            }
+                            
+                            em{
+                                font-family:Arial;
+                                font-style:normal;
+                                font-weight:bold;
+                            }
+                            em.rawContent{
+                                font-style:normal;
+                                font-weight:bold;
+                                font-style:italic;
+                            }
+                            
+                            div{
+                                padding-left:40px;
+                                margin-top:0;
+                                margin-bottom:0;
+                            }</style></head><body><h1>Moreton Bay marine park zoning 2008</h1><h2 class="headTitle">Identification</h2><div>
+                <em>Title
+            : 
+        </em>Moreton Bay marine park zoning 2008<br/><em>Alternative title
+            : 
+        </em>Moreton Bay marine park zoning 2008<br/><em>Date
+            : 
+        </em>
+                                2008-10-19
+                            
+             (
+            publication
+            ) 
+        <br/>
+                        <em>Presentation form code
+                : 
+            </em>mapDigital<br/>
+                    
+            <em>Related resource:</em><div><em>Identifier: </em>QPWS_SIS.MORETON_BAY_ZONING<br/><em>Relationship to related resource
+                : 
+            </em>source<br/></div></div><h2 class="headTitle">Description</h2><div><em>Abstract / Description: </em><div>This dataset represents the zoning from the Marine Parks (Moreton Bay) Zoning Plan 2008 (which comes into effect 1 March 2009).</div><em>Purpose: </em><div>If Purpose is required, please contact the Data Custodian.</div><em>Language
+            : 
+        </em>eng<br/><em>Character set
+            : 
+        </em>unknown<br/></div><h2 class="headTitle">Topic</h2><div><em>ISO topic category codes: </em>boundaries<br/></div><h2 class="headTitle">Spatial Data Information</h2><div>
+                <em>Spatial representation type
+                : 
+            </em>vector<br/>
+            
+            <em>Coordinate Reference System EPSG code: </em>EPSG:4938<br/><div><em>Title
+            : 
+        </em>EPSG Geodetic Parameter<br/>                                Dataset<br/><em>Date
+            : 
+        </em>
+                                        2007-07-16
+                                    
+             (
+            revision
+            ) 
+        <br/><em>Edition
+            : 
+        </em>Version 6.13<br/></div>
+        </div><h2 class="headTitle">Contacts</h2><div><em>Point of contact
+                : 
+            </em><br/><div><em>Organisation
+            : 
+        </em>Department of the Environment, Tourism, Science and Innovation<br/>
+                        <em>Address:</em><br/><div>
+                                    <em>Delivery point
+            : 
+        </em>400 George St<br/>
+                                    <em>City
+            : 
+        </em>Brisbane<br/>
+                                    <em>State
+            : 
+        </em>Queensland<br/>
+                                    <em>Postcode
+            : 
+        </em>4001<br/>
+                                    <em>Country
+            : 
+        </em>Australia<br/>
+                                    <em>Email: </em>
+             <a href="mailto:
+            Marine.Policy@des.qld.gov.au
+            ">
+            Marine.Policy@des.qld.gov.au
+            </a> 
+        
+                                </div>
+                                <em>Online resource:</em><div><em>Website: </em><a href="http://www.des.qld.gov.au"><small>http://www.des.qld.gov.au</small></a><br/></div>
+                            
+                    </div><em>Owner
+                : 
+            </em><br/><div><em>Organisation
+            : 
+        </em>Department of the Environment, Tourism, Science and Innovation<br/></div></div><h2 class="headTitle">Status</h2><div>
+                <em>Progress status
+                : 
+            </em>completed<br/>
+            
+                        <em>Maintenance and update frequency
+                : 
+            </em>asNeeded<br/>
+                    </div><h2 class="headTitle">Data / Resource Constraints</h2><div><em>Resource Access Level
+                            :
+                        </em>
+                                                 --&gt;
+                        
+                        
+                                            
+                    <div>
+                        <em>Security classification (ISO 19115)
+                : 
+            </em>unclassified<br/>
+                    </div><em>Copyright
+                : 
+            </em> (as use constraint)<br/><div>&copy The State of Queensland 2025</div><em>Licence
+                : 
+            </em> (as use constraint)<br/><div>This material is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by/4.0/">Creative Commons - Attribution 4.0 International</a> licence.<br /> <a rel="license" href="https://creativecommons.org/licenses/by/4.0/"><img alt="Creative Commons License" title="Creative Commons - Attribution 4.0 International" style="border: 0;" src="https://licensebuttons.net/l/by/4.0/88x31.png" /></a><br />Department of the Environment, Tourism, Science and Innovation requests attribution in the following manner:<br /> &copy The State of Queensland 2025</div></div><h2 class="headTitle">Temporal and Spatial extents:</h2><div>
+                
+                    
+                        <em>Bounding box: </em><div><em>West bounding longitude
+            : 
+        </em>153.010147<br/><em>East bounding longitude
+            : 
+        </em>153.611605<br/><em>South bounding latitude
+            : 
+        </em>-27.933261<br/><em>North bounding latitude
+            : 
+        </em>-26.802236<br/></div>
+                    
+                    
+                    
+                    <em>Temporal extent: </em><div>
+                            <em> Start: </em> 2007-12-03<em> End: </em> 2009-03-01<br/>
+                        </div>
+                
+            </div><h2 class="headTitle">Data Quality</h2><div>
+            
+                <em>Data quality scope:</em><div>
+                    
+                        <em>Level
+                : 
+            </em>dataset<br/>
+                    
+                    
+                </div>
+            
+            
+                <em>Completeness (omission):</em><div>
+                    
+                        <br/>                                This dataset is complete.<br/>                            
+                    
+                </div>
+            
+            
+                <em>Consistency (conceptual):</em><div>
+                    
+                        <br/>                                The dataset has a high degree of adherence to logical rules of data structure, attribution and relationships.<br/>                            
+                    
+                </div>
+            
+            
+                <em>Positional accuracy (external, absolute):</em><div>
+                    
+                        <br/>                                Methodology to develop an updated Moreton Bay Marine Park boundary.An updated marine park boundary was developed as part of the review process. This boundary was based on the description found in Schedule 1 of the Marine Parks (Declaration) Regulation 2006 and the best possible datasets available. The datasets used to construct the marine park boundary include:1) Digital cadastral database (DCDB)2) EPA's highest astronomical tide (HAT) dataset (derived from regional ecosystem mapping)3) EPA's Estates (national parks etc.)4) EPA's Designated downstream limits (DDL)5) NRW's mean high water springs (MHWS) coastline (derived from orthophotography)6) NRW's 2002 orthophotos 0.6m pixel size7) EPA's 2006 Spot imagery 2.5m pixel size (panchromatic sharpened)If more detail on horizontal accuracy is required, please contact the Data Custodian.<br/>                            
+                    
+                </div>
+            
+            
+                <em>Attribute accuracy (non quantitative):</em><div>
+                    
+                        <br/>                                All dataset attributes are complete and are 100% accurate.--------------------------------Dataset field and attributes are as below.Zone_id: Unique identifier for each zone within the Moreton Bay Marine Park Zoning Plan. Attribute abbreviations are:1) MNP, marine national park2) CPZ, conservation park zone3) HPZ, habitat protection zone4) GUZ, general use zoneZone_Name: Location name for each zone. Zone_Type: Used to specify the type of zone used in the Moreton Bay Marine Park Zoning Plan.Attribute values are:1) Marine national park zone2) Conservation park zone3) Habitat protection zone4) General use zonesSee the 'supplemental information' section for zoning type details.<br/>                            
+                    
+                </div>
+            
+            
+            
+            
+            
+            
+                <h2 class="headTitle">History:</h2><div>
+                    <em>Lineage statement:</em><div>This dataset has been developed as part of the Moreton Bay Marine Park zoning plan review process.The method for analysing more than 200 datasets used a process of continual review and refinement to ensure all social, economic, cultural and environmental information was considered against the series of 13 Scientific Guiding Principles - provided by an independent Expert Advisory Panel - being followed for the zoning plan review.The placement of zones was directly influenced by environmental (or "bio-physical") requirements as well as existing activities in the marine park. Mapping these existing activities was a major task during the first "information-gathering" stage of the zoning plan review, used to highlight areas where increased protection could not be achieved because significant economic costs would be passed on to the community or because of existing environmental conditions. Examples of these activities include shipping channels, boat ramps, anchorages, dredge disposal sites, sand extraction sites, major fishing grounds (both recreational and commercial) and aquaculture sites. The remaining areas were then investigated, using the Scientific Guiding Principles, to determine how each of the 16 broad-scale habitat types in the marine park could be best protected while limiting the impacts to users. DERM analysed this information to produce 35 candidate areas for higher protection, which were used to consult with key stakeholders at a series of workshops. Through these workshops, stakeholders provided information about how each candidate area would affect their particular interests. The workshops also provided stakeholder groups with the opportunity to propose alternative or modified candidate areas that they believed delivered better environmental or social outcomes. DERM used this feedback, together with the Scientific Guiding Principles, to add and remove candidate areas and to redefine the areas' boundaries to improve environmental outcomes or reduce the impacts on existing user groups as far as possible. The refined list of candidate areas was then analysed to determine the percentage of each habitat type that was represented in marine national park (green) zones. The remaining area of the marine park was then reviewed to determine what level of zoning would best connect the proposed marine national park (green) zones or protect ecological processes while minimising the impacts on users. The outcome of this data collection and analysis process was the draft zoning plan, which was released for formal public consultation on 3 December 2007 until 7 March 2008. The draft zoning plan proposed that 15 per cent of the marine park be protected in marine national park (green) zones. This included protecting all broad-scale habitat types in the marine park in these zones, with particular emphasis on habitats that support threatened species, such as turtles and dugong. More than 8000 submissions were received in response to the draft zoning plan. Information from these submissions was then assessed and considered against the Scientific Guiding Principles used for the review to develop the final zoning plan - the Marine Parks (Moreton Bay) Zoning Plan 2008. A total of 55 boundary changes were made to different zones in response to public submissions to ensure that the impacts on marine park users are minimised to the greatest possible extent.The Marine Parks (Moreton Bay) Zoning Plan 2008 comes into effect on 1 March 2009. For more information please visit www.derm.qld.gov.au</div>
+                    
+                    
+                </div>
+            
+        </div><h2 class="headTitle">Distribution</h2><div>
+        
+            
+                <em>Format(s):</em><div>
+                    <em>Name/identifier
+            : 
+        </em>Queensland Spatial Catalogue<br/>
+                    
+                    <em>Specification
+            : 
+        </em>Download Service<br/>
+                    
+                        
+                                
+                            
+                                
+                                    
+                                        <em>Online resource:</em><div><em>Website: </em><a href="http://qldspatial.information.qld.gov.au/catalogue/"><small>http://qldspatial.information.qld.gov.au/catalogue/</small></a><br/></div>
+                                    
+                                
+                            
+                                <em>Ordering information:</em><div><em>Instructions
+            : 
+        </em>Open the Queensland Spatial Catalogue (QSpatial). Select the large SEARCH button. Select one of the four filter options provided and then the further options within the filter. The resultant search is then displayed. Select your record and complete the order.<br/></div>
+                            
+                    
+                </div><br/>
+            
+            
+            
+                <em>Format(s):</em><div>
+                    <em>Name/identifier
+            : 
+        </em>Moreton Bay zoning<br/>
+                    
+                    
+                        
+                                
+                            
+                                
+                                    
+                                        <em>Online resource:</em><div><em>Protocol
+            : 
+        </em>WWW:LINK-1.0-http--link<br/><em>Application profile
+            : 
+        </em>ArcGIS REST API<br/><em>Name/identifier
+            : 
+        </em>Zone identification<br/><em>Description
+            : 
+        </em>This dataset represents the zoning from the Marine Parks (Moreton Bay) Zoning Plan 2008 (which comes into effect 1 March 2009).<br/><em>Website: </em><a href="https://spatial-gis.information.qld.gov.au/arcgis/rest/services/Environment/ParksMarineProtectedAreas/MapServer/2"><small>https://spatial-gis.information.qld.gov.au/arcgis/rest/services/Environment/ParksMarineProtectedAreas/MapServer/2</small></a><br/></div>
+                                    
+                                
+                            
+                                <em>Ordering information:</em><div><em>Fees
+            : 
+        </em>Nil<br/><em>Instructions
+            : 
+        </em>For use in desktop and web applications capable of connecting to ArcGIS REST map service endpoints.<br/></div>
+                            
+                    
+                </div><br/>
+            
+            
+                <em>Format(s):</em><div>
+                    <em>Name/identifier
+            : 
+        </em>downloadableData<br/>
+                    <em>Version
+            : 
+        </em>10.0<br/>
+                    <em>Specification
+            : 
+        </em>ESRI ArcGIS Server Geoportal Extension Content Type<br/>
+                </div><br/>
+            
+            
+                <em>Distributor:</em><div>
+                        
+                    
+                        <em>Format(s):</em><div>
+                            <em>Name/identifier
+            : 
+        </em>From the Queensland Spatial Catalogue available as ESRI Shape file SHP, MapInfo Tab file TAB, ESRI file geodatabase FGDB, Google file KMZ, and Geopackage version 1.0, 1.1, or 1.2 file GPKG<br/>
+                            
+                        </div><br/>
+                    
+                        
+                            <em>Transfer size (megabytes)
+            : 
+        </em>1<br/>
+                            
+                                <em>Online resource:</em><div><em>Website: </em><a href="http://qldspatial.information.qld.gov.au/catalogue/custom/search.page?q=%22Moreton Bay marine park zoning 2008%22"><small>http://qldspatial.information.qld.gov.au/catalogue/custom/search.page?q=%22Moreton Bay marine park zoning 2008%22</small></a><br/></div>
+                            
+                            
+                        
+                    </div>
+            
+            <em>Transfer options:</em><div>
+                
+                    
+                        <em>Online resource:</em><div><em>Website: </em>
+                                <em>Function
+                : 
+            </em>download<br/>
+                            </div>
+                    
+                
+            </div>
+        
+    <br><em>Web Service Finder:</em></br><div><em>Website: </em><a href="&#10;                        http://qldspatial.information.qld.gov.au/catalogue/custom/search.page?q=keywords:&quot;&#10;                        Moreton Bay marine park zoning 2008&#10;                        &quot;&amp;contentTypes=liveData&#10;                    ">QSpatial Web Service</a></div><div><em>Instructions: </em>
+                    Use the URL to search QSpatial for web services displaying or using this dataset.
+                
+                </div></div><h2 class="headTitle">Metadata Reference Information</h2><div>
+        <em>Hierarchy level (scope of the metadata)
+                : 
+            </em>dataset<br/>
+    <em>Identifier
+            : 
+        </em>{7FD7398A-EA5C-4D10-9DFC-5C0A92ACF95E}<br/><em>Parent identifier
+            : 
+        </em>{33E8D274-F420-40F2-B45A-3D4F6D88C659}<br/><em>Metadata date stamp: </em>
+        2010-09-21
+    <br/><em>Language
+            : 
+        </em>eng<br/>
+        <em>Character set
+                : 
+            </em>utf8<br/>
+    <em>Metadata standard name
+            : 
+        </em>ISO 19115:2005, ANZLIC ISO 1.1<br/><em>Metadata version name
+            : 
+        </em>QGIS<br/></div></body></html></span><input type="hidden" name="javax.faces.ViewState" id="javax.faces.ViewState" value="-771013075227289175:-115578823072576417" autocomplete="off" />
+</form>
+  <!--iframe class="section" src="/catalogue/rest/document?f=html&id=%7B7FD7398A-EA5C-4D10-9DFC-5C0A92ACF95E%7D" width="100%" scrolling="no" frameborder="0"></iframe>
+  //<span class="note">/catalogue/rest/document?f=html&id=%7B7FD7398A-EA5C-4D10-9DFC-5C0A92ACF95E%7D</span-->
+</span></td>
+</tr>
+</tbody>
+</table>
+
+		</div>
+	</div>
+</body>
+	</html>
+
+
+
