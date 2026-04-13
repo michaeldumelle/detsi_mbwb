@@ -84,50 +84,8 @@ spmodel, large data, glms, etc.
 ## The Data
 
 ```{r}
-#| label: clean-mb
-
-# read in raw geopackage
-dat <- read_sf(here("data", "MB_03-31-2026.gpkg")) %>%
-  st_transform(crs = 3113)
-
-# create new sediment type variable
-dat <- dat %>%
-  mutate(sed.type = case_when(
-    sed.type %in% c("M", "MR") ~ "Mud",
-    sed.type %in% c("SM", "RSM") ~ "Sandy.Mud",
-    sed.type %in% c("MS", "MSR") ~ "Muddy.Sand",
-    sed.type %in% c("S", "G", "SR") ~ "Sand",
-    sed.type %in% c("R", "RM", "RMS", "RS", "SH") ~ "Rock",
-    TRUE ~ "Other"
-  ))  %>%
-  # create month, year, growing season variables
-  mutate(month = str_sub(date, 6, 7)) %>%
-  mutate(year = str_sub(date, 1, 4)) %>%
-  mutate(growing = if_else(month %in% 9:12, "Growing", "Not-Growing"))
-
-var_names <- colnames(dat)
-
-# define variables to keep
-vars <-  c("sed.type", "depth.range", "temp.90d.mn", "turb.90d.mn",
-           "turb.fld.mn", "ds.flood", "sal.fld.mn", "fy", "month", "year",
-           "dom.spp", "ehmp.subzone", "ehmp.zone", "zone.type",
-           "site.id", "nearest.river", "dist.km", "growing")
-
-# remove data with missing eReefs variables
-dat <- dat %>%
-  dplyr::select(c(total.cover, all_of(vars))) %>%
-  na.omit()
-
-# add days since flood, years since flood, an after flood effect,
-# a decayign flood effect, and truncate the turbidity and salinity flood 
-# variables to be zero before the flood
-dat <- dat %>%
-  mutate(ds.flood = if_else(ds.flood < 0, 0, ds.flood)) %>%
-  mutate(yr.flood = ds.flood / 365) %>%
-  mutate(after.flood = if_else(ds.flood > 0, 1, 0)) %>%
-  mutate(yr.flood.recip = if_else(yr.flood == 0, 0, 1/yr.flood^2)) %>%
-  mutate(turb.fld.mn = if_else(yr.flood <= 0, 0, turb.fld.mn)) %>%
-  mutate(sal.fld.mn = if_else(yr.flood <= 0, 0, sal.fld.mn))
+#| label: read-mb
+dat <- read_sf(here("data", "MBsub_03-31-2026.gpkg"))
 
 # read in bay shapefiles
 bay <- read_sf(here("data", "Moreton_Bay_marine_park_zoning_2008.shp")) %>%
@@ -184,7 +142,7 @@ sal_vars <- tibble(
   Type = c(rep("Below", 9), rep("Below", 3), rep("Duration", 3), c("Mean", "Min")),
   Cutoff = c(rep(c("20", "25", "30"), each = 3), rep(c("20", "25", "30"), times = 2), rep("NA", 2))
 ) %>%
-  mutate(Included = "No")
+  mutate(Included = if_else(row_number() %in% c(16), "Yes", "No"))
 temp_vars <- tibble(
   Variable = rep("Temperature", 3),
   Flood = c(rep("No", 3)),
@@ -196,6 +154,15 @@ temp_vars <- tibble(
 vars <- bind_rows(turb_vars, sal_vars, temp_vars)
 vars %>%
   kable()
+```
+
+
+```{r}
+set.seed(0)
+form <- total.cover ~ sed.type + depth.range + temp.90d.mn + turb.90d.mn +
+    after.flood + yr.flood +
+    turb.fld.mn:yr.flood.recip
+spmod <- splm(form, data = dat, spcov_type = "exponential", local = list(size = 200), random = ~ ehmp.subzone + site.id)
 ```
 
 # Wide Bay
