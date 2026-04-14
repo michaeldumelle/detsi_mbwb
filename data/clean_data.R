@@ -47,14 +47,33 @@ dat <- dat %>%
   mutate(sal.fld.mn = if_else(yr.flood <= 0, 0, sal.fld.mn))
 
 vars <- colnames(dat)
-# vars <- vars[c(-1, -12)] dom.spp, total.cover
+dat_copy <- dat
+dat_vars <- vars[! vars %in% c("dom.spp", "total.cover")]
 dat <- dat %>%
-  group_by(across(all_of(vars))) %>%
+  group_by(across(all_of(dat_vars))) %>%
   summarize(total.cover = sum(total.cover)) %>%
   ungroup()
 
-dat2 <- read_xlsx(here("data", "MBsub_03-31-2026_covariate_data.xlsx"), sheet = "MBsub_compiled (2)")
-dat <- left_join(dat, dat2)
+
+# there are several ties here, pick one randomly
+dat_spp <- dat_copy %>%
+  group_by(across(all_of(dat_vars))) %>%
+  slice_max(total.cover, n = 1, with_ties = FALSE) %>%
+  ungroup() %>%
+  select(site.id, dom.spp) %>%
+  st_drop_geometry() 
+
+dat <- left_join(dat, dat_spp, by = "site.id")
+
+dat_cov <- read_xlsx(here("data", "MBsub_03-31-2026_covariate_data.xlsx"), sheet = "MBsub_compiled (2)")
+dat_cov <- dat_cov %>%
+  select(-fid, -date, -dom.spp) %>%
+  group_by(site.id) %>%
+  distinct() %>%
+  ungroup()
+
+dat <- left_join(dat, dat_cov, by = "site.id")
+
 st_write(dat, here("data", "MBsub_03-31-2026.gpkg"))
 
 
@@ -103,6 +122,7 @@ dat <- dat %>%
   dplyr::select(c(seagrass.b, all_of(vars))) %>%
   na.omit() 
 
-dat2 <- read_xlsx(here("data", "WBsub_03-31-2026_covariate_data.xlsx"), sheet = "WBsub_compiled")
-dat <- left_join(dat, dat2)
+dat2 <- read_xlsx(here("data", "WBsub_03-31-2026_covariate_data.xlsx"), sheet = "WBsub_compiled") %>%
+  select(-fid, -date, -dom.spp)
+dat <- left_join(dat, dat2, by = "uniq.id")
 st_write(dat, here("data", "WBsub_03-31-2026.gpkg"))

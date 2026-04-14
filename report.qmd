@@ -160,10 +160,16 @@ vars %>%
 ```{r}
 set.seed(0)
 form <- total.cover ~ sed.type + depth.range + temp.90d.mn + turb.90d.mn +
-    after.flood + yr.flood +
-    turb.fld.mn:yr.flood.recip
-spmod <- splm(form, data = dat, spcov_type = "exponential", local = list(size = 200), random = ~ ehmp.subzone + site.id)
+    after.flood + yr.flood + turb.fld.mn:yr.flood.recip
+spmod <- splm(form, data = dat, spcov_type = "exponential", local = list(size = 500), random = ~ ehmp.subzone)
 ```
+
+```{r}
+formrf <- total.cover ~ sed.type + depth.range + temp.90d.mn + turb.90d.mn +
+    after.flood + yr.flood + turb.fld.mn + ehmp.subzone
+rf <- ranger(formrf, data = st_drop_geometry(dat), importance = "impurity")
+```
+
 
 # Wide Bay
 
