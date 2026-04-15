@@ -42,7 +42,7 @@ dat <- dat %>%
   mutate(ds.flood = if_else(ds.flood < 0, 0, ds.flood)) %>%
   mutate(yr.flood = ds.flood / 365) %>%
   mutate(after.flood = if_else(ds.flood > 0, 1, 0)) %>%
-  mutate(yr.flood.recip = if_else(yr.flood == 0, 0, 1/yr.flood^2)) %>%
+  mutate(yr.flood.recip2 = if_else(yr.flood == 0, 0, 1/yr.flood^2)) %>%
   mutate(turb.fld.mn = if_else(yr.flood <= 0, 0, turb.fld.mn)) %>%
   mutate(sal.fld.mn = if_else(yr.flood <= 0, 0, sal.fld.mn))
 
@@ -106,8 +106,8 @@ dat <- dat %>%
   mutate(yr.flood1 = ds.flood1 / 365.25) %>%
   mutate(ds.flood2 = if_else(ds.flood2 < 0, 0, dat$ds.flood2) / 365.25) %>%
   mutate(yr.flood2 = ds.flood1 / 365.25) %>%
-  mutate(yr.flood1.recip = 1/yr.flood1^2) %>%
-  mutate(yr.flood2.recip = 1/yr.flood2^2) %>%
+  mutate(yr.flood1.recip2 = 1/yr.flood1^2) %>%
+  mutate(yr.flood2.recip2 = 1/yr.flood2^2) %>%
   rename(sed.type = substrate, depth.range = tidal)
 
 zones <- read_csv(here("data", "WB_zone.name.csv"))
@@ -116,7 +116,7 @@ dat <- dat %>% left_join(zones, by = "zone.name")
 
 vars <-  c("depth.range", "sed.type", "seagrass.b", "seagrass.p", "temp.90d.mn", "turb.90d.mn", 
            "zone.type", "yr.flood1", "yr.flood2", "turb.fld.mn", "sal.fld.mn", "zone.class", "fy", "month", "year",
-           "yr.flood1.recip", "yr.flood2.recip", "dom.spp", "total.cover", "uniq.id")
+           "yr.flood1.recip2", "yr.flood2.recip2", "dom.spp", "total.cover", "uniq.id")
 
 dat <- dat %>%
   dplyr::select(c(seagrass.b, all_of(vars))) %>%
