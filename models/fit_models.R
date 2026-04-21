@@ -13,7 +13,7 @@ dat <- read_sf(here("data", "MBsub_03-31-2026.gpkg"))
 ### Spatial Linear Model
 #########
 mb_tc_splm_form <- total.cover ~ sed.type + depth.range + temp.90d.mn + turb.90d.mn +
-  after.flood + yr.flood + turb.fld.mn:yr.flood.recip2
+  turb.fld.mn:yr.flood.recip2
 
 
 # no spatial covariance
@@ -152,7 +152,7 @@ dat$total.cover <- tc
 ### Random Forest
 #########
 mb_tc_rf_form <- total.cover ~ sed.type + depth.range + temp.90d.mn + turb.90d.mn +
-  after.flood + yr.flood + turb.fld.mn + ehmp.subzone
+  turb.fld.mn + yr.flood.recip2 + ehmp.subzone
 set.seed(0)
 mb_tc_rf_mod <- ranger(
   formula = mb_tc_rf_form,

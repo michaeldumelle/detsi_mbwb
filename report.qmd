@@ -240,11 +240,47 @@ From @tbl-geo_vars_mb, we kept the sediment type, tidal range, and years since f
 
 ### Model Fit {#sec-mb_model}
 
+```{r}
+#| label: tbl-mb_tc_splm_vars
+#| fig-cap: "Variables in the final Moreton Bay total cover model, their type (numeric or categorical), and if categorical, the number of unique levels."
+mb_tc_splm_vars <- tibble(
+  Variable = c("90 Day Temperature", "90 Day Turbidity", "Mean Flood Turbidity/Years Since Flood^2", "Sediment Type", "Tidal Range"), 
+  Type = c(rep("Numeric", 3), rep("Categorical", 2)),
+  `No. Levels` = c(rep("NA", 3), "6", "3")
+)
+mb_tc_splm_vars %>%
+  kable()
+```
+
+```{r}
+#| label: fig-time_since_flood
+#| fig-cap: "Time since the flood against the squared reciprocal of time since the flood."
+dat_yr.flood <- dat %>%
+  filter(yr.flood > 0) %>%
+  mutate(yr.flood = seq(min(.$yr.flood), max(.$yr.flood), length.out = NROW(.))) %>%
+  mutate(yr.flood.recip2 = 1/yr.flood^2)
+ggplot(dat_yr.flood, aes(x = yr.flood, y = yr.flood.recip2)) +
+  geom_line() +
+  labs(x = "Years Since Flood", y = expression("1/(Years Since Flood)"^2)) +
+  theme_bw(base_size = 12)
+```
 
 ```{r}
 # moreton bay tc model
 mb_tc_splm_mod <- readRDS(here("models", "mb_tc_splm_mod.rds"))
 ```
+
+To describe total seagrass cover in Moreton Bay, our final model was a spatial linear model (@eq-splm1) with the following explanatory variables: tidal range, sediment type, 90 day mean temperature (prior to sampling), pre- vs post-flood, years since the flood, 90 day turbidity (prior to sampling), and mean turbidity during the flood period scaled by time since the flood squared (@tbl-mb_tc_splm_vars). We scaled mean turbidity during the flood period so that the effect of turbidity during the flood event was allowed to decay with time since the flood (@fig-time_since_flood). Intuitively, this means that with time since the flood, the impact of turbidity during the flood event is lessened. Additionally, we used an exponential spatial covariance function and included a random effect for EHMP subzone. We fit the model using restricted maximum likelihood via the `splm()` function in `spmodel`.
+
+@tbl-mb-covariates shows the results from an analysis of variance applied to the fitted model. All explanatory variables had large test statistics and small p-values ($p$-value $<$ 0.01); here are some relevant takeaways:
+
+* Tidal Range: The estimated (marginal) average total cover is largest in the intertidal (26.89%), followed by shallow subtidal (16.51%) and deep subtidal (4.88%).
+* Sediment Type: The estimated (marginal) average total cover is largest in the other (25.6%), followed by muddy sand (19.1%), sandy mud (17.8%), mud (14.3%), sand (14.2%), and rock (5.62%).
+* 90 Day Temperature: A one-degree (C) increase in 90 day temperature is associated with a decrease in average total cover by 0.88%.
+* Mean Flood Turbidity / (Years Since Flood)$^2$: An one-unit increase in mean turbidity during the flood is associated with a decrease in average total cover by 2.05%/(Years Since Flood)$^2$.
+* 90 Day Turbidity: A one-unit increase in 90 day turbidity is associated with a decrease in average total cover by 7.18%.
+
+The estimated marginal means for tidal range and sediment type were calculated using the `emmeans` **R** package [@lenth2025emmeans].
 
 ```{r}
 #| label: tbl-mb-covariates
@@ -252,21 +288,29 @@ mb_tc_splm_mod <- readRDS(here("models", "mb_tc_splm_mod.rds"))
 mb_tc_splm_mod %>%
   anova() %>%
   tidy() %>%
+  filter(effects != "(Intercept)") %>%
   arrange(desc(statistic)) %>%
+  mutate(effects = c("Tidal Range", "Sediment Type", "90 Day Temperature", "Mean Flood Turbidity/Years Since Flood^2", "90 Day Turbidity")) %>%
   kable(digits = 3)
 ```
 
+
+We may inspect model diagnostics to better understand the overall model fit. Here we discuss how to partition the model into different components of variability, infer decay behavior of spatial autocorrlation, analyze standardized residuals to assess model assumptions, and identify influential observations that have a sizable impact on model fit. From @tbl-mb_varcomp, we see that of the total model variability, 11.2% is attributable to the explanatory variables (this quantity is sometimes called the Pseudo R-squared), 31.6% is attributable to the spatial random error, 7.3% is attributable to the EHMP subzone, and the remaining variability is independent random error. The estimated exponential spatial range ($\phi$) is 745.5 meters, which suggests two total cover observations are approximately (spatially) uncorrelated at a distance of $3\phi = \approx 2$km, or two kilometers. While the raw residuals will inform our resilience modeling in @sec-mb_resilience, we can check certain model assumptions using the standardized residuals, which have been decorrelated. Generally, the standardized residuals are centered around zero, though there is a slight right skew suggesting some observed total cover values are larger than expected (according to the model). Observations are called "influential" if they highly influence model fit. Influence is often measured via Cook's distance, and no observations exceed the often-used Cook's distance threshold value of one [@cook1982residuals].
+
 ```{r}
-#| label: tbl-mb-varcomp
+#| label: tbl-mb_varcomp
 #| tbl-cap: "Variance components in the Moreton Bay water quality and geographic model."
 mb_tc_splm_mod %>%
   varcomp() %>%
   mutate(varcomp = c("Covariates", "Spatial Effect", "Independent Error", "EHMP Subzone")) %>%
   adorn_pct_formatting() %>%
-  kable(digits = 3, col.names = c("Variance Component", "Percent (of Total Variability)"))
+  mutate(val = c(NA, coef(mb_tc_splm_mod, type = "spcov")[1:3])) %>%
+  kable(digits = 1, col.names = c("Variance Component", "Percent (of Total Variability)", "Parameter Value"))
 ```
 
 ### Block Kriging
+
+A tremendous benefit of using the spatial linear model is that block Kriging can be directly applied to predict the mean total seagrass cover bay-wide for any combination of explanatory variables and geographic regions, even if these variables were not directly used in modeling. @fig-bk_mb_ehmp and @fig-bk_mb_zone show that there are several EHMP subzones and conseravtion zones that have recovered to pre-flood levels (e.g., Deception Bay, Marine National Park Zone), while others have not (e.g., Southern Bay, General Use Zone). While EHMP subzone was included in the model as a random effect, management zone type was not -- via block Kriging, we can still quantify broad trends in total seagrass cover. @bk_mb_tidal shows that total seagrass cover is recovering less effectively in the intertidal range than the shallow or deep subtidal ranges, while @bk_mb_all shows that total seagrass cover is recovering bay-wide since the flood. Another useful application of block Kriging is scenario modeling, which can be used to characterize the impact of various future changes to broad-scale climatic patterns.
 
 ```{r}
 #| fig-width: 8
@@ -286,7 +330,7 @@ ggplot(bk_mb_ehmp, aes(x = fy, y = fit)) +
 #| fig-width: 8
 #| fig-height: 10
 #| label: fig-bk_mb_zone
-#| fig-cap: "Average total cover predictions by EHMP convervation zone. Red dots indicate the mean from the raw data. Black dots indicate the predicted mean in the region alongside a prediction interval."
+#| fig-cap: "Average total cover predictions by EHMP conservation zone. Red dots indicate the mean from the raw data. Black dots indicate the predicted mean in the region alongside a prediction interval."
 bk_mb_zone <- readRDS(here("models", "bk_mb_zone.rds"))
 ggplot(bk_mb_zone, aes(x = fy, y = fit)) +
   geom_point() +
@@ -311,7 +355,7 @@ ggplot(bk_mb_tidal, aes(x = fy, y = fit)) +
 ```
 
 ```{r}
-#| fig-width: 8
+#| fig-width: 6
 #| fig-height: 4
 #| label: fig-bk_mb_all
 #| fig-cap: "Average total cover predictions by Moreton Bay. Red dots indicate the mean from the raw data. Black dots indicate the predicted mean in the region alongside a prediction interval."
@@ -322,9 +366,10 @@ ggplot(bk_mb_all, aes(x = fy, y = fit)) +
   geom_point(aes(x = fy, y = raw_mean), color = "red") +
   theme_bw(base_size = 12)
 ```
+
 ### Alternative Approaches
 
-## Resilience Modeling
+## Resilience Modeling {#sec-mb_resilience}
 
 ### Model Fit
 
