@@ -96,7 +96,12 @@ dat <- dat %>%
   mutate(year = str_sub(date, 1, 4))
 
 dat <- dat %>%
-  rename(tidal = tidal_3cat, substrate = Substrate.5cat)
+  rename(tidal = tidal_3cat, substrate = Substrate.5cat) %>%
+  mutate(fy = case_when(
+    fy %in% "2022-05" ~ "2021-2022",
+    fy %in% c("2022-10", "2022-11") ~ "2022-2023",
+    .default = "2023-2024"
+  ))
 
 dat$yr.flood1 <- dat$ds.flood1 / 365.25
 dat$ds.flood2 <- ifelse(dat$ds.flood2 < 0, 0, dat$ds.flood2)
@@ -104,8 +109,7 @@ dat$yr.flood2 <- dat$ds.flood2 / 365.25
 
 dat <- dat %>%
   mutate(yr.flood1 = ds.flood1 / 365.25) %>%
-  mutate(ds.flood2 = if_else(ds.flood2 < 0, 0, dat$ds.flood2) / 365.25) %>%
-  mutate(yr.flood2 = ds.flood1 / 365.25) %>%
+  mutate(yr.flood2 = ds.flood2 / 365.25) %>%
   mutate(yr.flood1.recip2 = 1/yr.flood1^2) %>%
   mutate(yr.flood2.recip2 = 1/yr.flood2^2) %>%
   rename(sed.type = substrate, depth.range = tidal)

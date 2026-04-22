@@ -136,7 +136,7 @@ We started with just over 10,000 seagrass cover observations in Moreton Bay acro
 
 ```{r}
 #| label: tbl-n_fy_mb
-#| fig-cap: "Total seagrass observations Moreton Bay by financial year."
+#| fig-cap: "Total seagrass observations in Moreton Bay by financial year."
 dat %>%
   tabyl(fy) %>%
   adorn_totals(where = "row") %>%
@@ -167,7 +167,7 @@ ggplot(dat) +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
 ```
 
-We considered for modeling several water quality and geographic covariates. @tbl-wq_vars_mb summarize the water quality variables, which included both ambient and flood-related metrics related to turbidity, salinity, and temperature. The "Variable" column indicates the water quality variable turbidity, salinity, or temperature. The "Flood" variable indicates whether the measurement corresponds to a flood variable or not. The "Period" variable indicates the prior period (in days) relative to sampling or indicates whether the variable corresponds to a flood event. The "Type" column is the type of statistic, either a mean, minimum, maximum, number of days above (or below) a cutoff during "Period", or a maximum spell (i.e., duration) above (or below) a cutoff during "Period". The "Included" variable indicates whether the variable was included as a covariate in the final spatial model. We included only a few variables in the final model: mean turbidity in the 90 days prior to sampling, mean turbidity during the flood event, and mean temperature in the 90 days prior to sampling. We only included a single turbidity metric prior to sampling because these variables were all quite correlated with one another, making it hard for the model to tease apart signals. We believed 90 day mean turbidity prior to sampling to be the most accurate "running average" of turbidity prior to sampling. We used a similar rationale to select only a single turbidity metric from the flood and a single temperature metric prior to sampling. We omitted a flood salinity metric because it did not appear to have a significant impact on the total cover at modeling, and additionally, because we lacked data for salinity prior to sampling, it would be challenging to establish a "baseline" for salinity in order to tease apart prior to sampling effects from flood effects. We provide more detail regarding the modeling in @sec-mb_model.
+We considered for modeling several water quality and geographic covariates. @tbl-wq_vars_mb summarize the water quality variables, which included both ambient and flood-related metrics related to turbidity, salinity, and temperature. The "Variable" column indicates the water quality variable turbidity, salinity, or temperature. The "Flood" variable indicates whether the measurement corresponds to a flood variable or not. The "Period" variable indicates the prior period (in days) relative to sampling or indicates whether the variable corresponds to a flood event. The "Type" column is the type of statistic, either a mean, minimum, maximum, number of days above (or below) a cutoff during "Period", or a maximum spell (i.e., duration) above (or below) a cutoff during "Period". The "Included" variable indicates whether the variable was included as a covariate in the final spatial model. We included only a few variables in the final model: mean turbidity in the 90 days prior to sampling, mean turbidity during the flood event, and mean temperature in the 90 days prior to sampling. We only included a single turbidity metric prior to sampling because these variables were all quite correlated with one another, making it hard for the model to tease apart signals. We believed 90 day mean turbidity prior to sampling to be the most accurate "running average" of turbidity prior to sampling. We used a similar rationale to select only a single turbidity metric from the flood and a single temperature metric prior to sampling. We omitted a flood salinity metric primarily because we lacked data for salinity prior to sampling, thus it would be challenging to establish a "baseline" for salinity in order to tease apart prior to sampling effects from flood effects. We provide more detail regarding the modeling in @sec-mb_model.
 
 ```{r}
 #| label: tbl-wq_vars_mb
@@ -369,6 +369,34 @@ ggplot(bk_mb_all, aes(x = fy, y = fit)) +
 
 ### Alternative Approaches
 
+In addition to the spatial linear model, we considered several different modeling approaches (all using the same explanatory variables): a nonspatial linear model, a spatial beta regression model, a spatial gamma regression model, and a random forest model. The nonspatial linear model provided a useful baseline to compare the spatial linear model against, elucidating the impact of spatial dependence on model fit. The spatial beta regression model is a generalized linear model used to characterize proportion data between zero and one. To adhere to this restriction, total cover was 1) scaled to a proportion and 2) if exactly zero (one), set to 0.01 (0.99).  The spatial gamma regression model is a generalized linear model used to characterize skewed positive data. To adhere to this restriction, if total cover was exactly zero, it was set to 0.01. Finally, the random forest provided a useful comparison to a machine learning approach, quite different than the aforementioned statistical approaches.
+
+```{r}
+mb_tc_lm_loocv <- readRDS(here("models", "mb_tc_lm_loocv.rds"))
+mb_tc_splm_loocv <- readRDS(here("models", "mb_tc_splm_loocv.rds"))
+mb_tc_spglm_beta_loocv <- readRDS(here("models", "mb_tc_spglm_beta_loocv.rds")) * 100 # to undo scaling
+mb_tc_spglm_gamma_loocv <- readRDS(here("models", "mb_tc_spglm_gamma_loocv.rds"))
+mb_tc_lm_loocv <- readRDS(here("models", "mb_tc_lm_loocv.rds"))
+mb_tc_rf_oob <- readRDS(here("models", "mb_tc_rf_oob.rds"))
+mb_cv <- bind_rows(mb_tc_lm_loocv, mb_tc_splm_loocv, mb_tc_spglm_beta_loocv,
+                   mb_tc_spglm_gamma_loocv, mb_tc_rf_oob)
+```
+
+Importantly, all five approaches found important relationships among the explanatory variables and total cover, in the directions expected. From @tbl-mb_cv, the spatial linear model and random forest had the lowest out-of-sample root-mean-squared-prediction error, followed by teh generalized linear models and then by the nonspatial linear model. Random forest partial dependence plots [@greenwell2017pdp], which characterize the marginal behavior of a variable in a random forest model, suggested linear effects of the model variables to be reasonable. Given this context, we felt comfortable using the spatial linear model as the final model.
+```{r}
+#| label: tbl-mb_cv
+#| tbl-cap: "Moreton Bay out of sample prediction metrics for the various approaches."
+mb_cv %>%
+  mutate(approach = c("LM", "SPLM", "SPGLM-Beta", "SPGLM-Gamma", "RF")) %>%
+  select(approach, bias, RMSPE) %>%
+  arrange(RMSPE) %>%
+  kable(digits = 2, col.names = c("Approach", "MBias", "RMSPE"))
+```
+
+### Limitations and Future Suggestions
+
+While the spatial linear model was useful for characterizing broad patterns related to tidal range, sediment type, temperature, and turbidity while accounting for spatial dependence, there are some limitations. First, the eReefs water quality data are modeled, not directly observed in the field, potentially propogating modeling error. Second, there are many correlated water quality variables, making it hard (for any model) to isolate the effects of each component of water quality pre- and post-flood. Third, there is a lack of baseline mean salinity in the 90 days prior to sampling, which makes it challenging to directly study the effect of mean salinity during the flood period. Fourth, there is a lack of data immediately after the flood -- the first post-flood sampling effort occurred four months after the flood. Fifth, there is a lack of addition data sources that could help quantify the impact of various explanatory variables on total pre and post-flood, potentially varying across both space and time. Sixth, the locations at which data were collected were not randomly sampled. Randomly sampling sites helps to guard against sampling preferentially [@diggle2010preferential] and provides more robust and representative data sources [@dumelle2022comparison].
+
 ## Resilience Modeling {#sec-mb_resilience}
 
 ### Model Fit
@@ -376,6 +404,140 @@ ggplot(bk_mb_all, aes(x = fy, y = fit)) +
 ### Alternative Approaches
 
 # Wide Bay
+
+## The Data
+
+```{r}
+#| label: read-wb
+dat <- read_sf(here("data", "WBsub_03-31-2026.gpkg"))
+
+# read in bay shapefiles
+bay <- read_sf(here("data", "WideBay_zones.shp")) %>%
+  st_transform(crs = 3113)
+```
+
+We started with nearly 4,000 seagrass cover observations in Wide Bay across three financial years (2021-2022, 2022-2023, and 2023-2024). Some data (approximately 1,000 observations) were available from 1998-2002 but were omitted as they were far away temporally and did not have corresponding eReefs data [@steven2019ereefs]. In total, eReefs data with modeled water quality covariates related to turbidity and salinity were available at 2,663 observations. Because one of our research questions involved connecting water quality covariates to management actions, we proceed with this subset of 2,663 observations for modeling. Of the 2,663 observations, 1,073 were in 2021-2022, 524 were in 2022-2023, and 2,663 were in 2023-2024 (@tbl-n_fy_wb). 
+
+```{r}
+#| label: tbl-n_fy_wb
+#| fig-cap: "Total seagrass observations in Wide Bay by financial year."
+dat %>%
+  tabyl(fy) %>%
+  adorn_totals(where = "row") %>%
+  adorn_pct_formatting() %>%
+  kable(
+    col.names = c("Financial Year", "Sample Size", "Percent (of Total)"),
+    format.args = list(big.mark = ",")
+  )
+```
+
+## Water Quality and Geographic Modeling
+
+Total cover is a percentage that ranges from 0% (no seagrass) to 68.3%. @fig-cover_fy_mb shows total cover by financial year throughout the Bay. Total cover tends to be largest along the eastern shoreline of the Bay and lowest in the middle of the Bay. @fig-cover_fy_mb also reveals that 2022-2023 lacked sampling in much of the Great Sandy Strait.
+
+
+```{r}
+#| label: fig-cover_fy_wb
+#| fig-cap: "Total seagrass cover in Wide Bay by financial year."
+dat <- dat %>%
+  arrange(total.cover, fy)
+ggplot(dat) +
+  geom_sf(data = bay, fill = "white") +
+  geom_sf(data = dat, aes(color = total.cover), size = 0.8) +
+  scale_color_viridis_c(name = "Cover") +
+  scale_x_continuous(breaks = c(152.1, 152.7, 153.3)) +
+  facet_wrap(~ fy) +
+  theme_bw(base_size = 14) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+```
+
+We considered for modeling several water quality and geographic covariates. @tbl-wq_vars_wb summarizes the water quality variables, which included both ambient and flood-related metrics related to turbidity, salinity, and temperature. The "Variable" column indicates the water quality variable turbidity, salinity, or temperature. The "Flood" variable indicates whether the measurement corresponds to a flood variable or not. The "Period" variable indicates the prior period (in days) relative to sampling or indicates whether the variable corresponds to a flood event. The "Type" column is the type of statistic, either a mean, minimum, maximum, number of days above (or below) a cutoff during "Period", or a maximum spell (i.e., duration) above (or below) a cutoff during "Period". The "Included" variable indicates whether the variable was included as a covariate in the final spatial model. We included only a few variables in the final model: mean turbidity in the 90 days prior to sampling, average mean turbidity during both flood events, and mean temperature in the 90 days prior to sampling. We only included a single turbidity metric prior to sampling because these variables were all quite correlated with one another, making it hard for the model to tease apart signals. We believed 90 day mean turbidity prior to sampling to be the most accurate "running average" of turbidity prior to sampling. We used a similar rationale to select only a single turbidity metric from the flood and a single temperature metric prior to sampling. We omitted a flood salinity metric primarily because we lacked data for salinity prior to sampling, thus it would be challenging to establish a "baseline" for salinity in order to tease apart prior to sampling effects from flood effects. We provide more detail regarding the modeling in @sec-wb_model.
+
+```{r}
+#| label: tbl-wq_vars_wb
+#| tbl-cap: "Wide Bay water quality variables considered for modeling."
+turb_vars <- tibble(
+  Variable = rep("Turbidity", 20),
+  Flood = c(rep("No", 12), rep("Yes", 8)),
+  Period = c(rep(c("7", "30", "90"), times = 4), rep("Flood", 8)),
+  Type = c(rep("Mean", 3), rep("Above", 9), rep("Above", 3), rep("Duration", 3), c("Mean", "Max")),
+  Cutoff = c(rep("NA", 3), rep(c("3", "5", "6"), each = 3), rep(c("3", "5", "6"), times = 2), rep("NA", 2))
+) %>%
+  mutate(Included = if_else(row_number() %in% c(3, 19), "Yes", "No"))
+sal_vars <- tibble(
+  Variable = rep("Salinity", 17),
+  Flood = c(rep("No", 9), rep("Yes", 8)),
+  Period = c(rep(c("7", "30", "90"), times = 3), rep("Flood", 8)),
+  Type = c(rep("Below", 9), rep("Below", 3), rep("Duration", 3), c("Mean", "Min")),
+  Cutoff = c(rep(c("20", "25", "30"), each = 3), rep(c("20", "25", "30"), times = 2), rep("NA", 2))
+) %>%
+  mutate(Included = if_else(row_number() %in% c(0), "Yes", "No"))
+temp_vars <- tibble(
+  Variable = rep("Temperature", 3),
+  Flood = c(rep("No", 3)),
+  Period = c(rep(c("7", "30", "90"), times = 1)),
+  Type = c(rep("Mean", 3)),
+  Cutoff = c(rep("NA", 3))
+) %>%
+  mutate(Included = if_else(row_number() %in% c(3), "Yes", "No"))
+wq_vars <- bind_rows(turb_vars, sal_vars, temp_vars)
+wq_vars %>%
+  kable()
+```
+
+@tbl-geo_vars_wb summarizes the geographic variables, which have the following structure:
+
+* The "Sediment Type" variable has five levels: Sand, Sandy Mud, Muddy Sand, Mud, and Rock.
+* The "Tidal Range" variable has three levels: Shallow Subtidal, Intertidal, and Deep Subtidal.
+* The "Years Since Flood (One)" is numeric from 0.096 (May, 2022) to 1.65 (November, 2023). 
+* The "Years Since Flood (Two)" is numeric from 0 (Pre-flood) to 1.40 (November, 2023). 
+* The "Algae Presence" variable has two levels: Algae present and algae not present
+* The "Algae Cover" variable is numeric from zero to one.
+* The "Growing Season" variable has two levels: Growing (September - December) and Not Growing (January - August). 
+* The "Zone Class" variable has six levels: Central, East, Greate Sandy Strait, Hervey Bay, Southern, and Southwest (@fig-ehmp_subzone). 
+
+```{r}
+#| label: tbl-geo_vars_wb
+#| fig-cap: "Wide Bay geographic variables considered for modeling."
+geo_vars <- tibble(
+  Variable = c("Sediment Type", "Tidal Range", "Years Since Flood One",
+  "Years Since Flood Two", "Algae Presence", "Algae Cover", "Growing Season",
+  "Zone Class"), 
+  Effect = c(rep("Fixed", 7), "Random"),
+  Included = c(rep("Yes", 3), rep("No", 4), "Yes")
+)
+geo_vars %>%
+  kable()
+```
+
+```{r}
+#| label: fig-zone_class
+#| fig-cap: "Zone Classes in Wide Bay."
+ggplot(dat) +
+  geom_sf(data = bay, fill = "white") +
+  geom_sf(data = dat, aes(color = zone.class), size = 0.5) +
+  scale_color_discrete(name = "Zone Class") +
+  scale_x_continuous(breaks = c(153.1, 153.3, 153.5)) +
+  theme_bw(base_size = 14) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+```
+
+From @tbl-geo_vars_wb, we kept the sediment type, tidal range, and years since flood (one) variables as covariates in the model. We only included time since the first flood, as nearly all the data aside from teh observations in May 2022 were after both floods, making it possible to study cumulative flood effects but harder to tease apart effects from each individual flood. The algae variables were removed, as they did not seem related to total cover. We removed growing season from the model after determining that it likely it not ecologically useful, as a simple month proxy likely does not adequately account for the complexities of the more nuanced aspects of seagrass growth with time. We used zone class as a random effect to account for within-class correlation that may impact the relationships among total cover and the remaining variables. We provide more detail regarding the modeling in @sec-wb_model.
+
+### Model Fit {#sec-wb_model}
+
+### Block Kriging
+
+### Alternative Approaches
+
+### Limitations and Future Suggestions
+
+## Resilience Modeling
+
+### Model Fit
+
+### Alternative Approaches
+
 
 
 ## Outstanding Questions
@@ -390,11 +552,5 @@ ggplot(bk_mb_all, aes(x = fy, y = fit)) +
 # Appendix
 
 ## Moreton Bay
-
-```{r}
-formrf <- total.cover ~ sed.type + depth.range + temp.90d.mn + turb.90d.mn +
-    after.flood + yr.flood + turb.fld.mn + ehmp.subzone
-rf <- ranger(formrf, data = st_drop_geometry(dat), importance = "impurity")
-```
 
 ## Wide Bay
