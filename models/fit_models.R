@@ -267,6 +267,7 @@ saveRDS(wb_tc_spglm_beta_mod, file = here("models", "wb_tc_spglm_beta_mod.rds"))
 wb_tc_spglm_beta_loocv <- loocv(wb_tc_spglm_beta_mod, local = FALSE)
 saveRDS(wb_tc_spglm_beta_loocv, file = here("models", "wb_tc_spglm_beta_loocv.rds"))
 
+
 # Gamma
 y <- pmax(0.1, tc)
 dat$total.cover <- y
@@ -283,6 +284,23 @@ saveRDS(wb_tc_spglm_gamma_mod, file = here("models", "wb_tc_spglm_gamma_mod.rds"
 wb_tc_spglm_gamma_loocv <- loocv(wb_tc_spglm_gamma_mod, local = FALSE)
 # leave one out
 saveRDS(wb_tc_spglm_gamma_loocv, file = here("models", "wb_tc_spglm_gamma_loocv.rds"))
+
+# binom
+y <- ifelse(tc > 0, 1, 0)
+dat$total.cover <- y
+set.seed(0)
+wb_tc_spglm_binom_mod <- spglm(
+  formula = wb_tc_splm_form,
+  data = dat,
+  family = "binomial",
+  spcov_type = "exponential",
+  local = TRUE,
+  random = ~ zone.class
+)
+saveRDS(wb_tc_spglm_binom_mod, file = here("models", "wb_tc_spglm_binom_mod.rds"))
+wb_tc_spglm_binom_loocv <- loocv(wb_tc_spglm_binom_mod, local = FALSE)
+# leave one out
+saveRDS(wb_tc_spglm_binom_loocv, file = here("models", "wb_tc_spglm_binom_loocv.rds"))
 # reset total cover variable for use with formula
 dat$total.cover <- tc
 
