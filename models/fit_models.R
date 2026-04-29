@@ -180,7 +180,7 @@ dat <- read_sf(here("data", "WBsub_03-31-2026.gpkg"))
 ### Spatial Linear Model
 #########
 wb_tc_splm_form <- total.cover ~ depth.range + sed.type + temp.90d.mn +
-  turb.90d.mn + turb.fld.mn:yr.flood1.recip2 # + sal.fld.mn:yr.flood1.recip2
+  turb.90d.mn + turb.fld.mn:yr.flood1.recip2
 
 
 # no spatial covariance
