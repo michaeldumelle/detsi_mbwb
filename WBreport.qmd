@@ -6,6 +6,7 @@ format:
     toc: true
     cite-method: natbib
     biblio-style: plainnat
+    number-sections: true
   html:
     default
 execute: 
@@ -38,25 +39,25 @@ library(kableExtra)
 
 # Background
 
-Accurately characterizing drivers and resilience of seagrass cover is essential to improving the ecological health of the Moreton Bay and Wide Bay ecosystems. Over the past few decades, various scientific efforts have informed our current understanding of trends, behaviors, and flood responses of seagrass cover in both Moreton Bay and Wide Bay [@preen1995flood; @mcmahon2005herbicide; @york2022post] [@abal1996seagrass; @udy1997growth; @samper2016organic; @ovsyanikova2026spatial] as well as Australia more widely [@kilminster2015unravelling; @gilby2018seagrass; @o2018seagrass]. Remote sensing has offered new capabilities for seagrass cover mapping [@roelfsema2009integrated], while innovative statistical approaches have offered novel methods for studying resilience at site-specific scales [@gilby2023drivers]. Our work contributes to this body of literature by applying spatially explicit statistical models [@cressie1993statistics] to study seagrass cover drivers, resilience, and recovery in both Moreton Bay and Wide Bay. Specifically, we provide and contextualize answers to four specific research questions, applicable to both Moreton Bay and Wide Bay:
+Accurately characterizing drivers and resilience of seagrass cover is essential to improving the ecological health of the Wide Bay ecosystem. Over the past few decades, various scientific efforts have informed our current understanding of trends, behaviors, and flood responses of seagrass cover in Wide Bay [@preen1995flood; @mcmahon2005herbicide; @york2022post] as well as Australia more widely [@kilminster2015unravelling; @gilby2018seagrass; @o2018seagrass]. Remote sensing has offered new capabilities for seagrass cover mapping [@roelfsema2009integrated], while innovative statistical approaches have offered novel methods for studying resilience at site-specific scales [@gilby2023drivers]. Our work contributes to this body of literature by applying spatially explicit statistical models [@cressie1993statistics] to study seagrass cover drivers, resilience, and recovery in Wide Bay. Specifically, we provide and contextualize answers to four specific research questions, applicable to Wide Bay:
 
 1. Can we identify water quality covariates that act as triggers for seagrass cover management responses? Are these triggers different based on whether they result from a specific event (e.g., flood) or are ambient?
-2. Did seagrass cover improve after the flood event(s)? If so, how and where?
+2. Did seagrass cover improve after the flood events? If so, how and where?
 3. Can we identify site-specific resilience indicators, which describe where recovery is likely to be enhanced or impeded?
 4. What factors contribute to seagrass resilience?
 
-The spatially explicit statistical models (i.e., spatial models) we used to answer these research questions are related to commonly used linear and generalized linear models but incorporate _spatial dependence_ Spatial dependence measures how similar two sites are based on their distance. Formally, we can build spatial dependence directly into spatial models by leveraging Tobler's First Law of Geography [@tobler1970computer], which states succinctly that "nearby sites tend to be more similar than distant sites". Not only is this intuitive based on "first principles" perspective, but spatial models to provide many advantages for modeling spatial data compared to models that assume independence among observations (i.e., nonspatial models). First, nonspatial models tend to underestimate uncertainty, yielding covariate standard errors and p-values for covariates that are too small and corresponding confidence intervals that are too narrow. Second, spatial models improve prediction at unsampled locations by borrowing strength from nearby observations, yielding more precise predictions and corresponding standard errors that vary by location. Third, spatial models decompose model error into separate spatial and nonspatial components, informing residual and resilience structure in ways that nonspatial models cannot. Fourth, spatial models can provide ecologically meaningful insight into the spatial dependence structure of the process, informing relationships among measured and unmeasured variables as well as future sampling plans. @zimmerman2024spatial provide a thorough review of spatial models for ecological and environmental data, providing more detail and justification for the claims made above.
+The spatially explicit statistical models (i.e., spatial models) we used to answer these research questions are related to commonly used linear and generalized linear models but incorporate _spatial dependence_. Spatial dependence measures how similar two sites are based on their distance. Formally, we can build spatial dependence directly into spatial models by leveraging Tobler's First Law of Geography [@tobler1970computer], which states succinctly that "nearby sites tend to be more similar than distant sites". Not only is this intuitive based on "first principles" perspective, but spatial models to provide many advantages for modeling spatial data compared to models that assume independence among observations (i.e., nonspatial models). First, nonspatial models tend to underestimate uncertainty, yielding covariate standard errors and p-values for covariates that are too small and corresponding confidence intervals that are too narrow. Second, spatial models improve prediction at unsampled locations by borrowing strength from nearby observations, yielding more precise predictions and corresponding standard errors that vary by location. Third, spatial models decompose model error into separate spatial and nonspatial components, informing residual and resilience structure in ways that nonspatial models cannot. Fourth, spatial models can provide ecologically meaningful insight into the spatial dependence structure of the process, informing relationships among measured and unmeasured variables as well as future sampling plans. @zimmerman2024spatial provide a thorough review of spatial models for ecological and environmental data, providing more detail and justification for the claims made above.
 
-Spatial models offer many benefits over commonly used machine learning algorithms like random forests [@breiman2001random; @cutler2007random; @james2017introduction; @kuhn2022tidy]. First, traditional machine learning algorithms do not incorporate spatial dependence and, by consequence, often perform worse than spatial models at characterizing important covariates and predicting at unobserved locations [@fox2020comparing]. Second, machine learning algorithms struggle to quantify uncertainty in a principled manner, something spatial models excel at. Third, covariate inference is more straightforward using spatial models, as they naturally provide p-values that enable structured testing of hypotheses. Fourth, spatial models provide a rich set of diagnostics like leverage and Cook's distances [@montgomery2021introduction], quantities not generally defined for machine learning algorithms. This is not to say that machine learning algorithms cannot be very useful in ecological data analyses, but rather than spatial models are often a more effective tool for modeling spatial data. 
+Spatial models offer many benefits over commonly used machine learning algorithms like random forests [@breiman2001random; @cutler2007random; @james2017introduction; @kuhn2022tidy]. First, traditional machine learning algorithms do not incorporate spatial dependence and, by consequence, often perform worse than spatial models at characterizing important covariates and predicting at unobserved locations [@fox2020comparing]. Second, machine learning algorithms struggle to quantify uncertainty in a principled manner, something spatial models excel at. Third, covariate inference is more straightforward using spatial models, as they naturally provide p-values that enable structured testing of hypotheses. Fourth, spatial models provide a rich set of diagnostics like leverage and Cook's distances [@montgomery2021introduction], quantities not generally defined for machine learning algorithms. This is not to say that machine learning algorithms cannot be very useful in ecological data analyses, but rather than spatial models are sometimes a more effective tool for modeling spatial data. 
 
-Though there are many benefits of spatial models over machine learning algorithms, the reverse is also true. Machine learning algorithms much more simply capture complex nonlinearities "out-of-the-box", bypassing the tuning often required for spatial models that involve nonlinear components like splines. This can be especially useful for ecological data, which are often full of nonlinear relationships [@fox2017assessing]. Machine learning algorithms also typically rely on few, if any, distributional assumptions and can be more robust against unusual observations like outliers [@hastie2009elements]. Machine learning algorithms also tend to be much mroe computational efficient than spatial models. Importantly, machine learning algorithms and spatial models can be complementary tools that help shed insight into complicated ecological processes (something we reiterate in the upcoming analyses). An exciting and developing area of statistical research involves incorporating spatial modeling strategies directly into machine learning algorithms [@saha2023random; @heaton2025scalable].
+Though there are many benefits of spatial models over machine learning algorithms, the reverse is also true. Machine learning algorithms much more simply capture complex nonlinearities "out-of-the-box", bypassing the tuning often required for spatial models that involve nonlinear components like splines. This can be especially useful for ecological data, which are often full of nonlinear relationships [@fox2017assessing]. Machine learning algorithms also typically rely on few, if any, distributional assumptions and can be more robust against unusual observations like outliers [@hastie2009elements]. Machine learning algorithms also tend to be much more computational efficient than spatial models. Importantly, machine learning algorithms and spatial models can be complementary tools that help shed insight into complicated ecological processes (something we reiterate in the upcoming analyses). An exciting and developing area of statistical research involves incorporating spatial modeling strategies directly into machine learning algorithms [@saha2023random; @heaton2025scalable].
 
 The first spatially explicit model we define is the spatial linear model. The spatial linear model is a _mixed-effects model_ [@pinheiro2000mixed; @bolker2015linear] written as
 
 $$
 y_i = \beta_0 + \beta_1x_{1, i} + \beta_2x_{2, i} + ... + \beta_p x_{p, i} + \tau_i + \epsilon_i,
 $$ {#eq-splm1}
-where $i = 1, 2, ..., n$ indexes the $n$ observations. The quantity $y_i$ is the response variable (for observation $i$), the $\beta$ parameters are slope parameters controlling the covariates, $x_{j, i}$ (for $j = 1, 2, ..., p$). The random error $\tau_i$ is a spatial random error, and the random error $\epsilon_i$ is the nonspatial (i.e., independent) random error. The spatial random error is spatially structured, capturing spatial residual effects like environmental gradients we do not have data to represent. The nonspatial random error is not spatially structure and captures nonspatial residual effects like measurement error and microscale variation. The difference between a traditional (i.e., nonspatial) linear model and a spatial linear model is the inclusion of $\tau_i$ (in the spatial linear model). The spatial random error implied by $\tau_i$ is governed by a _spatial covariance function_. The spatial covariance function allows the model to incorporate spatial dependence, yielding the improved model performance previously described. @fig-spcov_fns shows three different spatial covariance functions that describe different ways the spatial covariance decays with distance. Model parameters and standard errors are estimated from data using likelihood-based [@patterson1971recovery; @harville1977maximum; @wolfinger1994computing] or semivariogram-based [@cressie1985fitting; @curriero1999composite] estimation methods. Often, the spatial linear model in @eq-splm1 in is written more compactly using _matrix notation_:
+where $i = 1, 2, ..., n$ indexes the $n$ observations. The quantity $y_i$ is the response variable (for observation $i$), the $\beta$ parameters are slope parameters controlling the covariates, $x_{j, i}$ (for $j = 1, 2, ..., p$). The random error $\tau_i$ is a spatial random error, and the random error $\epsilon_i$ is the nonspatial (i.e., independent) random error. The spatial random error is spatially structured, capturing spatial residual effects like environmental gradients we do not have data to fully represent. The nonspatial random error is not spatially structure and captures nonspatial residual effects like measurement error and microscale variation. The difference between a traditional (i.e., nonspatial) linear model and a spatial linear model is the inclusion of $\tau_i$ (in the spatial linear model). The spatial random error implied by $\tau_i$ is governed by a _spatial covariance function_. The spatial covariance function allows the model to incorporate spatial dependence, yielding the improved model performance previously described. @fig-spcov_fns shows three different spatial covariance functions that describe different ways the spatial covariance decays with distance. Model parameters and standard errors are estimated from data using likelihood-based [@patterson1971recovery; @harville1977maximum; @wolfinger1994computing] or semivariogram-based [@cressie1985fitting; @curriero1999composite] estimation methods. Often, the spatial linear model in @eq-splm1 in is written more compactly using _matrix notation_:
 $$
 \mathbf{y} = \mathbf{X} \boldsymbol{\beta} + \boldsymbol{\tau} + \boldsymbol{\epsilon},
 $$ {#eq-splm2}
@@ -83,7 +84,7 @@ ggplot(spcor_dat, aes(x = Distance, y = `Spatial Covariance`, color = Function, 
   theme_bw(base_size = 14)
 ```
 
-Like the traditional linear model, the spatial linear model can capture complex nonlinearities in the data through the use of interaction effects [@faraway2002practical; @lenth2025emmeans], splines [@chambers1992statistical], additive models [@wood2017generalized; @pedersen2019hierarchical], and penalized regression models like the ridge and lasso [@tibshirani1996regression]. Generally, this is accomplished by leveraging _basis functions_ that break down nonlinear behavior into a set of additive linear components that may include penalty terms which guard against overfitting. Furthermore, there is no assumption that $y_i$ itself is normally distributed; rather, distributional assumptions are placed on the random errors after incorporating the slope parameters. This clarification implies the spatial (and nonspatial) linear models can be quite effective at modeling a range of data that are not normally distributed. For highly nonnormal data, tools like generalized linear models, which we discuss later, are helpful. Finally, under general conditions, the slope parameters of the spatial (and nonspatial) linear models are approximately normally distributed with a large sample size (see @casella2024statistical for a general justification via the Central Limit Theorem and @zhang2005towards for nuances regarding spatial data). This is beneficial because it justifies valid hypothesis testing on the slope coefficients (often of primary ecological interest), no matter the distribution of the data (given certain assumptions are satisfied).
+Like the traditional linear model, the spatial linear model can capture complex nonlinearities in the data through the use of interaction effects [@faraway2002practical; @lenth2025emmeans], splines [@chambers1992statistical], additive models [@wood2017generalized; @pedersen2019hierarchical], and penalized regression models like the ridge and lasso [@tibshirani1996regression]. Generally, this is accomplished by leveraging _basis functions_ that break down nonlinear behavior into a set of additive linear components that may include penalty terms which guard against overfitting. Furthermore, there is no assumption that $y_i$ itself is normally distributed; rather, distributional assumptions are placed on the random errors after incorporating the slope parameters. This clarification implies the spatial (and nonspatial) linear models can be quite effective at modeling a range of data that are not normally distributed. For highly nonnormal data, tools like generalized linear models, which we discuss later, can be helpful. Finally, under general conditions, the slope parameters of the spatial (and nonspatial) linear models are approximately normally distributed with a large sample size (see @casella2024statistical for a general justification via the Central Limit Theorem and @zhang2005towards for nuances regarding spatial data). This is beneficial because it justifies valid hypothesis testing on the slope coefficients (often of primary ecological interest), no matter the distribution of the data (given certain assumptions are satisfied).
 
 One of the most useful applications of the spatial linear model is predicting the response variable at unobserved locations. A very useful spatial prediction method called Kriging has a rich theoretical justification [@cressie1990origins; @stein1999interpolation]. Kriging is the spatial analogue to best linear unbiased prediction (BLUP) for mixed models [@henderson1975best]. Via Kriging, the spatial linear model produces BLUPs at each unobserved location of interest, alongside prediction intervals to characterize uncertainty. While useful, sometimes the goal is to create a BLUP for an entire region of interest. This technique, which builds upon the theoretical foundations of Kriging, is called block Kriging [@ver2002sampling; @cressie2006block]. The intuition is to make point predictions at a very dense grid in the study region and then average these predictions, appropriately characterizing uncertainty. Together, Kriging and block Kriging provide a complete set of tools for spatial prediction, given the fit of a spatial linear model.
 
@@ -117,11 +118,9 @@ kable(glm_table,
       booktabs   = TRUE)
 ```
 
-Spatial models are complicated, both theoretically and computationally. This has contributed to their relative lack of use in the ecological community. However, recent advances in open-source software have made spatial models more accessible to ecologists who have strong subject matter expertise but may lack sufficient statistical background or computational skills to implement them from scratch. One such advancement is the `spmodel` **R** package [@dumelle2023spmodel], which emulates base-**R** functions like `lm()` and `glm()` to account for spatial dependence via `splm()` and `spglm()`, respectively. Familiar **R** functions like `summary()` and `predict()` acn be used directly on models fit via `spmodel`. Importantly, `spmodel` also has tools for spatial random forest residual modeling [@fox2020comparing], applications to large data of several thousand observations via spatial indexing [@ver2023indexing], and cross validation [@stone1974cross; @roberts2017cross].
+Spatial models are complicated, both theoretically and computationally. This has contributed to their relative lack of use in the ecological community. However, recent advances in open-source software have made spatial models more accessible to ecologists who have strong subject matter expertise but may lack sufficient statistical background or computational skills to implement them from scratch. One such advancement is the `spmodel` **R** package [@dumelle2023spmodel], which emulates base-**R** functions like `lm()` and `glm()` to account for spatial dependence via `splm()` and `spglm()`, respectively. Familiar **R** functions like `summary()` and `predict()` can be used directly on models fit via `spmodel`. Importantly, `spmodel` also has tools for spatial random forest residual modeling [@fox2020comparing], applications to large data of several thousand observations via spatial indexing [@ver2023indexing], and cross validation [@stone1974cross; @roberts2017cross].
 
-# Wide Bay
-
-## The Data
+# The Data
 
 ```{r}
 #| label: read-wb
@@ -136,7 +135,7 @@ We started with nearly 4,000 seagrass cover observations in Wide Bay across thre
 
 ```{r}
 #| label: tbl-n_fy_wb
-#| fig-cap: "Total seagrass observations in Wide Bay by financial year."
+#| tbl-cap: "Total seagrass observations in Wide Bay by financial year."
 dat %>%
   tabyl(fy) %>%
   adorn_totals(where = "row") %>%
@@ -147,7 +146,7 @@ dat %>%
   )
 ```
 
-## Water Quality and Geographic Modeling
+# Water Quality and Geographic Modeling
 
 Total cover is a percentage that ranges from 0% (no seagrass) to 68.3%. @fig-cover_fy_wb shows total cover by financial year throughout the Bay. Total cover tends to be largest along the eastern shoreline of the Bay and lowest in the middle of the Bay. @fig-cover_fy_wb also reveals that 2022-2023 lacked sampling in much of the Great Sandy Strait.
 
@@ -167,13 +166,13 @@ ggplot(dat) +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
 ```
 
-We considered for modeling several water quality and geographic covariates. @tbl-wq_vars_wb summarizes the water quality variables, which included both ambient and flood-related metrics related to turbidity, salinity, and temperature. The "Variable" column indicates the water quality variable turbidity, salinity, or temperature. The "Flood" variable indicates whether the measurement corresponds to a flood variable or not. The "Period" variable indicates the prior period (in days) relative to sampling or indicates whether the variable corresponds to a flood event. The "Type" column is the type of statistic, either a mean, minimum, maximum, number of days above (or below) a cutoff during "Period", or a maximum spell (i.e., duration) above (or below) a cutoff during "Period". The "Included" variable indicates whether the variable was included as a covariate in the final spatial model. We included only a few variables in the final model: mean turbidity in the 90 days prior to sampling, average mean turbidity during both flood events, and mean temperature in the 90 days prior to sampling. We only included a single turbidity metric prior to sampling because these variables were all quite correlated with one another, making it hard for the model to tease apart signals. We believed 90 day mean turbidity prior to sampling to be the most accurate "running average" of turbidity prior to sampling (@fig-cover_turb_wb). We used a similar rationale to select only a single turbidity metric from the flood and a single temperature metric prior to sampling. We omitted a flood salinity metric primarily because we lacked data for salinity prior to sampling, thus it would be challenging to establish a "baseline" for salinity in order to tease apart prior to sampling effects from flood effects. We provide more detail regarding the modeling in @sec-wb_model.
+We considered for modeling several water quality and geographic covariates. @tbl-wq_vars_wb summarizes the water quality variables, which included both ambient and flood-related metrics related to turbidity, salinity, and temperature. The "Variable" column indicates the water quality variable turbidity, salinity, or temperature. The "Flood" variable indicates whether the measurement corresponds to a flood variable or not. The "Period" variable indicates the prior period (in days) relative to sampling or indicates whether the variable corresponds to a flood event. The "Type" column is the type of statistic, either a mean, minimum, maximum, number of days above (or below) a cutoff during "Period", or a maximum spell (i.e., duration) above (or below) a cutoff during "Period". The "Included" variable indicates whether the variable was included as a covariate in the final spatial model. We included only a few variables in the final model: mean turbidity in the 90 days prior to sampling, average mean turbidity during both flood events, and mean temperature in the 90 days prior to sampling. We only included a single turbidity metric prior to sampling because these variables were all quite correlated with one another, making it hard for the model to tease apart signals. We believed 90 day mean turbidity prior to sampling to be the most accurate "running average" of turbidity prior to sampling. We used a similar rationale to select only a single turbidity metric from the flood and a single temperature metric prior to sampling. We omitted a flood salinity metric primarily because we lacked data for salinity prior to sampling, thus it would be challenging to establish a "baseline" for salinity in order to tease apart prior to sampling effects from flood effects (moreover, they did not seem strongly related to total cover). We provide more detail regarding the statistical modeling in @sec-wb_model.
 
 ```{r}
 #| label: tbl-wq_vars_wb
 #| tbl-cap: "Wide Bay water quality variables considered for modeling."
 turb_vars <- tibble(
-  Variable = rep("Turbidity", 20),
+  Variable = rep("Turbidity (NTU)", 20),
   Flood = c(rep("No", 12), rep("Yes", 8)),
   Period = c(rep(c("7", "30", "90"), times = 4), rep("Flood", 8)),
   Type = c(rep("Mean", 3), rep("Above", 9), rep("Above", 3), rep("Duration", 3), c("Mean", "Max")),
@@ -181,7 +180,7 @@ turb_vars <- tibble(
 ) %>%
   mutate(Included = if_else(row_number() %in% c(3, 19), "Yes", "No"))
 sal_vars <- tibble(
-  Variable = rep("Salinity", 17),
+  Variable = rep("Salinity (PSU)", 17),
   Flood = c(rep("No", 9), rep("Yes", 8)),
   Period = c(rep(c("7", "30", "90"), times = 3), rep("Flood", 8)),
   Type = c(rep("Below", 9), rep("Below", 3), rep("Duration", 3), c("Mean", "Min")),
@@ -189,7 +188,7 @@ sal_vars <- tibble(
 ) %>%
   mutate(Included = if_else(row_number() %in% c(0), "Yes", "No"))
 temp_vars <- tibble(
-  Variable = rep("Temperature", 3),
+  Variable = rep("Temperature (deg C)", 3),
   Flood = c(rep("No", 3)),
   Period = c(rep(c("7", "30", "90"), times = 1)),
   Type = c(rep("Mean", 3)),
@@ -201,23 +200,10 @@ wq_vars %>%
   kable()
 ```
 
-```{r}
-#| label: fig-cover_turb_wb
-#| fig-cap: "Total seagrass cover in Wide Bay by turbidity class and financial year. Boxplot width is proportional to the number of observations in each x-axis level (within financial year). The y-axis is truncated at 20, though a few observations have higher total seagrass cover."
-dat_turb <- dat %>%
-  mutate(exceed_0.5 = factor(if_else(turb.90d.mn > 0.5, "Yes", "No"), levels = c("Yes", "No")))
-ggplot(dat_turb, aes(x = exceed_0.5, y = total.cover)) +
-  geom_boxplot(varwidth = TRUE, size = 0.5) +
-  facet_wrap(~ fy) + 
-  labs(x = "Exceeds 0.5 NTU", y = "Total Cover") +
-  coord_cartesian(ylim = c(0, 20)) +
-  theme_bw(base_size = 14)
-```
-
 @tbl-geo_vars_wb summarizes the geographic variables, which have the following structure:
 
 * The "Sediment Type" variable has five levels: Sand, Sandy Mud, Muddy Sand, Mud, and Rock.
-* The "Tidal Range" variable has three levels: Shallow Subtidal, Intertidal, and Deep Subtidal (@fig-cover_tidal_wb).
+* The "Tidal Range" variable has three levels: Shallow Subtidal, Intertidal, and Deep Subtidal.
 * The "Years Since Flood (One)" is numeric from 0.096 (May, 2022) to 1.65 (November, 2023). 
 * The "Years Since Flood (Two)" is numeric from 0 (Pre-flood) to 1.40 (November, 2023). 
 * The "Algae Presence" variable has two levels: Algae present and algae not present
@@ -227,7 +213,7 @@ ggplot(dat_turb, aes(x = exceed_0.5, y = total.cover)) +
 
 ```{r}
 #| label: tbl-geo_vars_wb
-#| fig-cap: "Wide Bay geographic variables considered for modeling."
+#| tbl-cap: "Wide Bay geographic variables considered for modeling."
 geo_vars <- tibble(
   Variable = c("Sediment Type", "Tidal Range", "Years Since Flood One",
   "Years Since Flood Two", "Algae Presence", "Algae Cover", "Growing Season",
@@ -240,8 +226,217 @@ geo_vars %>%
 ```
 
 ```{r}
+#| fig-width: 8
+#| fig-height: 8
+#| label: fig-zone_class
+#| fig-cap: "Observations and their zone classes in Wide Bay."
+ggplot(dat) +
+  geom_sf(data = bay, fill = "white") +
+  geom_sf(data = dat, aes(color = zone.class), size = 0.5) +
+  scale_color_discrete(name = "Zone Class") +
+  scale_x_continuous(breaks = c(153.1, 153.3, 153.5)) +
+  theme_bw(base_size = 14) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+```
+
+From @tbl-geo_vars_wb, we kept the sediment type, tidal range, and years since flood (one) variables as covariates in the model. We only included time since the first flood, as nearly all the data aside from teh observations in May 2022 were after both floods, making it possible to study cumulative flood effects but harder to tease apart effects from each individual flood. The algae variables were removed, as they did not seem related to total cover. We removed growing season from the model after determining that it likely is not ecologically useful, as a simple month proxy likely does not adequately account for the complexities of the more nuanced aspects of seagrass growth with time. We used zone class as a random effect to account for within-class correlation that may impact the relationships among total cover and the remaining variables. We provide more detail regarding the modeling in @sec-wb_model.
+
+## Model Fit {#sec-wb_model}
+
+
+```{r}
+#| label: tbl-wb_tc_splm_vars
+#| tbl-cap: "Variables in the final Wide Bay total cover model, their type (numeric or categorical), and if categorical, the number of unique levels."
+wb_tc_splm_vars <- tibble(
+  Variable = c("90 Day Temperature", "90 Day Turbidity", "Mean Floods Turbidity/Years Since Flood One^2", "Sediment Type", "Tidal Range"), 
+  Type = c(rep("Numeric", 3), rep("Categorical", 2)),
+  `No. Levels` = c(rep("NA", 3), "5", "3")
+)
+wb_tc_splm_vars %>%
+  kable()
+```
+
+```{r}
+# wide bay tc model
+wb_tc_splm_mod <- readRDS(here("models", "wb_tc_splm_mod.rds"))
+```
+
+To describe total seagrass cover in Wide Bay, our final model was a spatial linear model (@eq-splm1) with the following explanatory variables: tidal range, sediment type, 90 day mean temperature (prior to sampling), 90 day turbidity (prior to sampling), and mean turbidity during the flood periods scaled by time since the first flood squared (@tbl-wb_tc_splm_vars). We scaled mean turbidity during the first flood period so that the effect of turbidity during the flood event was allowed to decay with time since the flood. Intuitively, this means that with time since the flood, the impact of turbidity during the flood event is lessened. We also considered scaling by time since flood (not squared), which produced similar results. Furthermore, we used an exponential spatial covariance function and included a random effect for zone class. We fit the model using restricted maximum likelihood via the `splm()` function in `spmodel`.
+
+@tbl-wb-covariates shows the results from an analysis of variance applied to the fitted model. The sediment type and temperature covariates had small p-values ($p$-value $<$ 0.01) indicating significant evidence of a relationship with total cover, while other covariates had large p-values ($p$-value $>$ 0.1) indicating little evidence of an association with total cover; here are some relevant takeaways:
+
+* Sediment Type: The estimated (marginal) average total cover is largest in mud (4.3%), followed by sand (3.6%), muddy sand (3.2%), rock (3.0%), and sandy mud (2.8%). 
+* 90 Day Temperature: A one-degree (C) increase in 90 day temperature is associated with a decrease in average total cover by 0.5% points.
+
+Together, these results can inform triggers for management responses in various conditions. For example, given the decrease in total cover with temperature, one could propose a specific temperature threshold above which management intervention is warranted. Note that the estimated marginal means for tidal range and sediment type were calculated using the `emmeans` **R** package [@lenth2025emmeans]. The estimated marginal means for sediment type were calculated using the `emmeans` **R** package [@lenth2025emmeans].
+
+```{r}
+#| label: tbl-wb-covariates
+#| tbl-cap: "ANOVA table of covariates in the Wide Bay water quality and geographic model."
+wb_tc_splm_mod %>%
+  anova() %>%
+  tidy() %>%
+  filter(effects != "(Intercept)") %>%
+  mutate(effects = c("Tidal Range", "Sediment Type", "90 Day Temperature",
+                     "90 Day Turbidity", "Mean Flood Turbidity/Years Since Flood One^2")) %>%  
+  arrange(desc(statistic)) %>%
+  kable(digits = 3, col.names = c("Effects", "df", "Chi-sq", "p.value"))
+```
+
+
+We may inspect model diagnostics to better understand the overall model fit. Here we discuss how to partition the model into different components of variability, infer decay behavior of spatial autocorrlation, analyze standardized residuals to assess model assumptions, and identify influential observations that have a sizable impact on model fit. From @tbl-wb_varcomp, we see that of the total model variability, 5.4% is attributable to the explanatory variables (this quantity is sometimes called the Pseudo R-squared), 54.2% is attributable to the spatial random error, 5.8% is attributable to the zone class, and the remaining variability is independent random error. The estimated exponential spatial range ($\phi$) is 14,757 meters, which suggests two total cover observations are approximately (spatially) uncorrelated at a distance of $3\phi \approx 45$km, or forty-five kilometers. While the raw residuals will inform our resilience modeling in @sec-wb_resilience, we can check certain model assumptions using the standardized residuals, which have been decorrelated. Generally, the standardized residuals are centered around zero, though there is a slight right skew suggesting some observed total cover values are larger than expected (according to the model). Observations are called "influential" if they highly influence model fit. Influence is often measured via Cook's distance, and no observations exceed the often-used Cook's distance threshold value of one [@cook1982residuals].
+
+```{r}
+#| label: tbl-wb_varcomp
+#| tbl-cap: "Variance components in the Wide Bay water quality and geographic model."
+wb_tc_splm_mod %>%
+  varcomp() %>%
+  mutate(varcomp = c("Covariates", "Spatial Effect", "Independent Error", "Zone Class")) %>%
+  adorn_pct_formatting() %>%
+  mutate(val = c(NA, coef(wb_tc_splm_mod, type = "spcov")[1:3])) %>%
+  kable(digits = 1, col.names = c("Variance Component", "Percent (of Total Variability)", "Parameter Value"))
+```
+
+## Block Kriging
+
+A tremendous benefit of using the spatial linear model is that block Kriging can be directly applied to predict the mean total seagrass cover bay-wide for any combination of explanatory variables and geographic regions, even if these variables were not directly used in modeling. @fig-bk_wb_class and @fig-bk_wb_zone show that generally, there is no evidence total cover in the zone classes or conversations zones is decreasing since the floods (in financial year 2021-2022). While zone class was included in the model as a random effect, conservation zone type was not -- via block Kriging, we can still quantify broad trends in total seagrass cover. @fig-bk_wb_tidal shows that total seagrass cover is improving in the deep subtidal and intertidal classes since the floods, while @fig-bk_wb_all shows that total seagrass cover is recovering bay-wide since the floods. Another useful application of block Kriging is scenario modeling, which can be used to characterize the impact of various future changes to broad-scale climatic patterns.
+
+```{r}
+#| fig-width: 8
+#| fig-height: 10
+#| label: fig-bk_wb_class
+#| fig-cap: "Average total cover predictions by zone class. Red dots indicate the mean from the raw data. Black dots indicate the predicted mean in the region alongside a prediction interval."
+bk_wb_class <- readRDS(here("models", "bk_wb_class.rds"))
+ggplot(bk_wb_class, aes(x = fy, y = fit)) +
+  geom_point() +
+  geom_errorbar(aes(ymin = lwr, ymax = upr), width = 0.3) +
+  geom_point(aes(x = fy, y = raw_mean), color = "red") +
+  facet_wrap(~ zone.class, ncol = 2) +
+  labs(x = "Financial Year", y = "Predicted Mean Total Cover") +
+  theme_bw(base_size = 12)
+```
+
+```{r}
+#| fig-width: 8
+#| fig-height: 10
+#| label: fig-bk_wb_zone
+#| fig-cap: "Average total cover predictions by conservation zone. Red dots indicate the mean from the raw data. Black dots indicate the predicted mean in the region alongside a prediction interval."
+bk_wb_zone <- readRDS(here("models", "bk_wb_zone.rds"))
+ggplot(bk_wb_zone, aes(x = fy, y = fit)) +
+  geom_point() +
+  geom_errorbar(aes(ymin = lwr, ymax = upr), width = 0.3) +
+  geom_point(aes(x = fy, y = raw_mean), color = "red") +
+  facet_wrap(~ zone.type, ncol = 2) +
+  labs(x = "Financial Year", y = "Predicted Mean Total Cover") +
+  theme_bw(base_size = 12)
+```
+
+```{r}
+#| fig-width: 8
+#| fig-height: 6
+#| label: fig-bk_wb_tidal
+#| fig-cap: "Average total cover predictions by tidal range. Red dots indicate the mean from the raw data. Black dots indicate the predicted mean in the region alongside a prediction interval."
+bk_wb_tidal <- readRDS(here("models", "bk_wb_tidal.rds"))
+ggplot(bk_wb_tidal, aes(x = fy, y = fit)) +
+  geom_point() +
+  geom_errorbar(aes(ymin = lwr, ymax = upr), width = 0.3) +
+  geom_point(aes(x = fy, y = raw_mean), color = "red") +
+  facet_wrap(~ depth.range, ncol = 2) +
+  labs(x = "Financial Year", y = "Predicted Mean Total Cover") +
+  theme_bw(base_size = 12)
+```
+
+```{r}
+#| fig-width: 4
+#| fig-height: 3
+#| label: fig-bk_wb_all
+#| fig-cap: "Average total cover predictions in Wide Bay. Red dots indicate the mean from the raw data. Black dots indicate the predicted mean in the region alongside a prediction interval."
+bk_wb_all <- readRDS(here("models", "bk_wb_all.rds"))
+ggplot(bk_wb_all, aes(x = fy, y = fit)) +
+  geom_point() +
+  geom_errorbar(aes(ymin = lwr, ymax = upr), width = 0.3) +
+  geom_point(aes(x = fy, y = raw_mean), color = "red") +
+  labs(x = "Financial Year", y = "Predicted Mean Total Cover") +
+  theme_bw(base_size = 12)
+```
+
+## Alternative Approaches
+
+In addition to the spatial linear model, we considered several different modeling approaches (all using the same explanatory variables): a nonspatial linear model, a spatial beta regression model, a spatial gamma regression model, a random forest model, and a spatial binomial model. The nonspatial linear model provided a useful baseline to compare the spatial linear model against, elucidating the impact of spatial dependence on model fit. The spatial beta regression model is a generalized linear model used to characterize proportion data between zero and one. To adhere to this restriction, total cover was 1) scaled to a proportion and 2) if exactly zero (one), set to 0.01 (0.99).  The spatial gamma regression model is a generalized linear model used to characterize skewed positive data. To adhere to this restriction, if total cover was exactly zero, it was set to 0.01. The random forest provided a useful comparison to a machine learning approach, quite different than the aforementioned statistical approaches. We characterized the directionality of random forest effects using partial dependence plots (@fig-rf_turb). Finally, the binomial model is a generalized linear model used to characterize presence/absence (success/failure) data. To adhere to this restriction, total cover was 1) given a value of zero if there was no seagrass or 2) given a value of one if there was any seagrass.
+
+```{r}
+#| label: fig-rf_turb
+#| fig-cap: "Random forest partial dependence for total cover as a function of 90 day mean turbidity."
+wb_tc_rf_mod <- readRDS(file = here("models", "wb_tc_rf_mod.rds"))
+pred.grid <- tibble(turb.90d.mn = seq(0, 1, length.out = 16))
+pd <- partial(wb_tc_rf_mod, pred.var = "turb.90d.mn", pred.grid = pred.grid) 
+ggplot(pd, aes(x = turb.90d.mn, y = yhat)) +
+  geom_line(linewidth = 2) +
+  labs(x = "90 Day Mean Turbidity", y = "Total Cover") +
+  theme_bw(base_size = 14)
+```
+
+```{r}
+wb_tc_lm_loocv <- readRDS(here("models", "wb_tc_lm_loocv.rds"))
+wb_tc_splm_loocv <- readRDS(here("models", "wb_tc_splm_loocv.rds"))
+wb_tc_spglm_beta_loocv <- readRDS(here("models", "wb_tc_spglm_beta_loocv.rds")) * 100 # to undo scaling
+wb_tc_spglm_gamma_loocv <- readRDS(here("models", "wb_tc_spglm_gamma_loocv.rds"))
+wb_tc_lm_loocv <- readRDS(here("models", "wb_tc_lm_loocv.rds"))
+wb_tc_rf_oob <- readRDS(here("models", "wb_tc_rf_oob.rds"))
+wb_cv <- bind_rows(wb_tc_lm_loocv, wb_tc_splm_loocv, wb_tc_spglm_beta_loocv,
+                   wb_tc_spglm_gamma_loocv, wb_tc_rf_oob)
+```
+
+All six approaches found notable, negative relationships between temperature and total cover as well as notable to moderate relationships between sediment type and total cover as well as tidal range and total cover. The nonspatial linear model, random forest, and spatial beta regression model found notable, generally negative relationships between turbidity and total cover, although quite small in magnitude. From @tbl-wb_cv, the spatial linear model and random forest had the lowest out-of-sample root-mean-squared-prediction error, followed by the generalized linear models and then by the nonspatial linear model. Random forest partial dependence plots [@greenwell2017pdp], which characterize the marginal behavior of a variable in a random forest model, suggested linear effects of the model variables to be reasonable. Given this context, we chose the spatial linear model as the final model, although it is certainly reasonable to justify other modeling choices that enforce specific, more realistic restrictions on the response distribution like the spatial beta regression model (enforcing proportions).
+```{r}
+#| label: tbl-wb_cv
+#| tbl-cap: "Wide Bay out of sample prediction metrics for the various approaches. Mean bias (MBias) tended to be small relative to root-mean-squared-prediction error (RMSPE)."
+wb_cv %>%
+  mutate(approach = c("LM", "SPLM", "SPGLM-Beta", "SPGLM-Gamma", "RF")) %>%
+  select(approach, bias, RMSPE) %>%
+  arrange(RMSPE) %>%
+  kable(digits = 2, col.names = c("Approach", "MBias", "RMSPE"))
+```
+
+## Limitations and Future Suggestions
+
+While the spatial linear model was useful for characterizing broad patterns related to tidal range, sediment type, temperature, and turbidity while accounting for spatial dependence, there are some limitations. First, the eReefs water quality data are modeled, not directly observed in the field, potentially propagating modeling error. Second, there are many correlated water quality variables, making it hard (for any model) to isolate the effects of each component of water quality pre- and post-flood. Third, there is a lack of baseline mean salinity in the 90 days prior to sampling, which makes it challenging to directly study the effect of mean salinity during the flood period. Fourth, there is a lack of data immediately after each flood -- nearly all of the data are after both floods, making it challenging to isolate the contribution from each flood separately. Fifth, there was no pre-flood data, making it challenging to compare against a pre-flood baseline. Sixth, there is a lack of addition data sources that could help quantify the impact of various explanatory variables on total pre and post-flood, potentially varying across both space and time (e.g., light attenuation, biological interactions, etc.). Seventh, the locations at which data were collected were not randomly sampled. Randomly sampling sites helps to guard against sampling preferentially [@diggle2010preferential] and provides more robust and representative data sources [@dumelle2022comparison].
+
+# Resilience Modeling {#sec-wb_resilience}
+
+## Model Fit
+
+## Alternative Approaches
+
+# Revisiting the Research Questions
+
+\clearpage
+
+# References {.unnumbered}
+
+::: {#refs}
+:::
+
+# Appendix {.unnumbered}
+
+```{r}
+#| label: fig-time_since_flood1
+#| fig-cap: "Time since the flood against the squared reciprocal of time since the first flood."
+#| eval: false
+dat_yr.flood1 <- dat %>%
+  filter(yr.flood1 > 0) %>%
+  mutate(yr.flood1 = seq(min(.$yr.flood1), max(.$yr.flood1), length.out = NROW(.))) %>%
+  mutate(yr.flood1.recip2 = 1/yr.flood1^2)
+ggplot(dat_yr.flood1, aes(x = yr.flood1, y = yr.flood1.recip2)) +
+  geom_line() +
+  labs(x = "Years Since Flood", y = expression("1/(Years Since Flood One)"^2)) +
+  theme_bw(base_size = 12)
+```
+
+```{r}
 #| label: fig-cover_tidal_wb
 #| fig-cap: "Total seagrass cover in Wide Bay by tidal class and financial year. Boxplot width is proportional to the number of observations in each x-axis level (within financial year). The y-axis is truncated at 20, though a few observations have higher total seagrass cover."
+#| eval: false
 dat_tidal <- dat %>%
   mutate(depth.range = case_when(
     depth.range == "Deep subtidal (>2m)" ~ "DSt",
@@ -259,186 +454,15 @@ ggplot(dat_tidal, aes(x = depth.range, y = total.cover)) +
 ```
 
 ```{r}
-#| label: fig-zone_class
-#| fig-cap: "Zone Classes in Wide Bay."
-ggplot(dat) +
-  geom_sf(data = bay, fill = "white") +
-  geom_sf(data = dat, aes(color = zone.class), size = 0.5) +
-  scale_color_discrete(name = "Zone Class") +
-  scale_x_continuous(breaks = c(153.1, 153.3, 153.5)) +
-  theme_bw(base_size = 14) +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+#| label: fig-cover_turb_wb
+#| fig-cap: "Total seagrass cover in Wide Bay by turbidity class (whether exceeding 0.5 NTU) and financial year. Generally, increased turbidity has little affect on median total cover. Boxplot width is proportional to the number of observations in each x-axis level (within financial year). The y-axis is truncated at 20, though a few observations have higher total seagrass cover."
+#| eval: false
+dat_turb <- dat %>%
+  mutate(exceed_0.5 = factor(if_else(turb.90d.mn > 0.5, "Yes", "No"), levels = c("Yes", "No")))
+ggplot(dat_turb, aes(x = exceed_0.5, y = total.cover)) +
+  geom_boxplot(varwidth = TRUE, size = 0.5) +
+  facet_wrap(~ fy) + 
+  labs(x = "Exceeds 0.5 NTU", y = "Total Cover") +
+  coord_cartesian(ylim = c(0, 20)) +
+  theme_bw(base_size = 14)
 ```
-
-From @tbl-geo_vars_wb, we kept the sediment type, tidal range, and years since flood (one) variables as covariates in the model. We only included time since the first flood, as nearly all the data aside from teh observations in May 2022 were after both floods, making it possible to study cumulative flood effects but harder to tease apart effects from each individual flood. The algae variables were removed, as they did not seem related to total cover. We removed growing season from the model after determining that it likely it not ecologically useful, as a simple month proxy likely does not adequately account for the complexities of the more nuanced aspects of seagrass growth with time. We used zone class as a random effect to account for within-class correlation that may impact the relationships among total cover and the remaining variables. We provide more detail regarding the modeling in @sec-wb_model.
-
-### Model Fit {#sec-wb_model}
-
-
-```{r}
-#| label: tbl-wb_tc_splm_vars
-#| fig-cap: "Variables in the final Wide Bay total cover model, their type (numeric or categorical), and if categorical, the number of unique levels."
-wb_tc_splm_vars <- tibble(
-  Variable = c("90 Day Temperature", "90 Day Turbidity", "Mean Floods Turbidity/Years Since Flood One^2", "Sediment Type", "Tidal Range"), 
-  Type = c(rep("Numeric", 3), rep("Categorical", 2)),
-  `No. Levels` = c(rep("NA", 3), "5", "3")
-)
-wb_tc_splm_vars %>%
-  kable()
-```
-
-```{r}
-#| label: fig-time_since_flood1
-#| fig-cap: "Time since the flood against the squared reciprocal of time since the first flood."
-dat_yr.flood1 <- dat %>%
-  filter(yr.flood1 > 0) %>%
-  mutate(yr.flood1 = seq(min(.$yr.flood1), max(.$yr.flood1), length.out = NROW(.))) %>%
-  mutate(yr.flood1.recip2 = 1/yr.flood1^2)
-ggplot(dat_yr.flood1, aes(x = yr.flood1, y = yr.flood1.recip2)) +
-  geom_line() +
-  labs(x = "Years Since Flood", y = expression("1/(Years Since Flood One)"^2)) +
-  theme_bw(base_size = 12)
-```
-
-```{r}
-# wide bay tc model
-wb_tc_splm_mod <- readRDS(here("models", "wb_tc_splm_mod.rds"))
-```
-
-To describe total seagrass cover in Wide Bay, our final model was a spatial linear model (@eq-splm1) with the following explanatory variables: tidal range, sediment type, 90 day mean temperature (prior to sampling), 90 day turbidity (prior to sampling), and mean turbidity during the flood periods scaled by time since the first flood squared (@tbl-wb_tc_splm_vars). We scaled mean turbidity during the first flood period so that the effect of turbidity during the flood event was allowed to decay with time since the flood (@fig-time_since_flood1). Intuitively, this means that with time since the flood, the impact of turbidity during the flood event is lessened. Additionally, we used an exponential spatial covariance function and included a random effect for zone class. We fit the model using restricted maximum likelihood via the `splm()` function in `spmodel`.
-
-@tbl-wb-covariates shows the results from an analysis of variance applied to the fitted model. The sediment type and temperature covariates had small p-values ($p$-value $<$ 0.01) indicating significant evidence of a relationship with total cover, while other covariates had large p-values ($p$-value $>$ 0.1) indicating little evidence of an association with total cover; here are some relevant takeaways:
-
-* Sediment Type: The estimated (marginal) average total cover is largest in mud (4.3%), followed by sand (3.6%), muddy sand (3.2%), rock (3.0%), and sandy mud (2.8%). 
-* 90 Day Temperature: A one-degree (C) increase in 90 day temperature is associated with a decrease in average total cover by 0.5%.
-
-The estimated marginal means for sediment type were calculated using the `emmeans` **R** package [@lenth2025emmeans].
-
-```{r}
-#| label: tbl-wb-covariates
-#| tbl-cap: "ANOVA table of covariates in the Wide Bay water quality and geographic model."
-wb_tc_splm_mod %>%
-  anova() %>%
-  tidy() %>%
-  filter(effects != "(Intercept)") %>%
-  mutate(effects = c("Tidal Range", "Sediment Type", "90 Day Temperature",
-                     "90 Day Turbidity", "Mean Flood Turbidity/Years Since Flood One^2")) %>%  
-  arrange(desc(statistic)) %>%
-  kable(digits = 3)
-```
-
-
-We may inspect model diagnostics to better understand the overall model fit. Here we discuss how to partition the model into different components of variability, infer decay behavior of spatial autocorrlation, analyze standardized residuals to assess model assumptions, and identify influential observations that have a sizable impact on model fit. From @tbl-wb_varcomp, we see that of the total model variability, 5.4% is attributable to the explanatory variables (this quantity is sometimes called the Pseudo R-squared), 54.2% is attributable to the spatial random error, 5.8% is attributable to the zone class, and the remaining variability is independent random error. The estimated exponential spatial range ($\phi$) is 14,757 meters, which suggests two total cover observations are approximately (spatially) uncorrelated at a distance of $3\phi = \approx 45$km, or forty-five kilometers. While the raw residuals will inform our resilience modeling in @sec-wb_resilience, we can check certain model assumptions using the standardized residuals, which have been decorrelated. Generally, the standardized residuals are centered around zero, though there is a slight right skew suggesting some observed total cover values are larger than expected (according to the model). Observations are called "influential" if they highly influence model fit. Influence is often measured via Cook's distance, and no observations exceed the often-used Cook's distance threshold value of one [@cook1982residuals].
-
-```{r}
-#| label: tbl-wb_varcomp
-#| tbl-cap: "Variance components in the Wide Bay water quality and geographic model."
-wb_tc_splm_mod %>%
-  varcomp() %>%
-  mutate(varcomp = c("Covariates", "Spatial Effect", "Independent Error", "Zone Class")) %>%
-  adorn_pct_formatting() %>%
-  mutate(val = c(NA, coef(wb_tc_splm_mod, type = "spcov")[1:3])) %>%
-  kable(digits = 1, col.names = c("Variance Component", "Percent (of Total Variability)", "Parameter Value"))
-```
-
-### Block Kriging
-
-A tremendous benefit of using the spatial linear model is that block Kriging can be directly applied to predict the mean total seagrass cover bay-wide for any combination of explanatory variables and geographic regions, even if these variables were not directly used in modeling. @fig-bk_wb_class and @fig-bk_wb_zone show that there are several EHMP subzones and conseravtion zones that have recovered to pre-flood levels (e.g., Deception Bay, Marine National Park Zone), while others have not (e.g., Southern Bay, General Use Zone). While EHMP subzone was included in the model as a random effect, management zone type was not -- via block Kriging, we can still quantify broad trends in total seagrass cover. @fig-bk_wb_tidal shows that total seagrass cover is recovering less effectively in the intertidal range than the shallow or deep subtidal ranges, while @fig-bk_wb_all shows that total seagrass cover is recovering bay-wide since the flood. Another useful application of block Kriging is scenario modeling, which can be used to characterize the impact of various future changes to broad-scale climatic patterns.
-
-```{r}
-#| fig-width: 8
-#| fig-height: 10
-#| label: fig-bk_wb_class
-#| fig-cap: "Average total cover predictions by zone class. Red dots indicate the mean from the raw data. Black dots indicate the predicted mean in the region alongside a prediction interval."
-bk_wb_class <- readRDS(here("models", "bk_wb_class.rds"))
-ggplot(bk_wb_class, aes(x = fy, y = fit)) +
-  geom_point() +
-  geom_errorbar(aes(ymin = lwr, ymax = upr), width = 0.3) +
-  geom_point(aes(x = fy, y = raw_mean), color = "red") +
-  facet_wrap(~ zone.class, ncol = 2) +
-  theme_bw(base_size = 12)
-```
-
-```{r}
-#| fig-width: 8
-#| fig-height: 10
-#| label: fig-bk_wb_zone
-#| fig-cap: "Average total cover predictions by conservation zone. Red dots indicate the mean from the raw data. Black dots indicate the predicted mean in the region alongside a prediction interval."
-bk_wb_zone <- readRDS(here("models", "bk_wb_zone.rds"))
-ggplot(bk_wb_zone, aes(x = fy, y = fit)) +
-  geom_point() +
-  geom_errorbar(aes(ymin = lwr, ymax = upr), width = 0.3) +
-  geom_point(aes(x = fy, y = raw_mean), color = "red") +
-  facet_wrap(~ zone.type, ncol = 2) +
-  theme_bw(base_size = 12)
-```
-
-```{r}
-#| fig-width: 8
-#| fig-height: 6
-#| label: fig-bk_wb_tidal
-#| fig-cap: "Average total cover predictions by tidal range. Red dots indicate the mean from the raw data. Black dots indicate the predicted mean in the region alongside a prediction interval."
-bk_wb_tidal <- readRDS(here("models", "bk_wb_tidal.rds"))
-ggplot(bk_wb_tidal, aes(x = fy, y = fit)) +
-  geom_point() +
-  geom_errorbar(aes(ymin = lwr, ymax = upr), width = 0.3) +
-  geom_point(aes(x = fy, y = raw_mean), color = "red") +
-  facet_wrap(~ depth.range, ncol = 2) +
-  theme_bw(base_size = 12)
-```
-
-```{r}
-#| fig-width: 4
-#| fig-height: 3
-#| label: fig-bk_wb_all
-#| fig-cap: "Average total cover predictions by Wide Bay. Red dots indicate the mean from the raw data. Black dots indicate the predicted mean in the region alongside a prediction interval."
-bk_wb_all <- readRDS(here("models", "bk_wb_all.rds"))
-ggplot(bk_wb_all, aes(x = fy, y = fit)) +
-  geom_point() +
-  geom_errorbar(aes(ymin = lwr, ymax = upr), width = 0.3) +
-  geom_point(aes(x = fy, y = raw_mean), color = "red") +
-  theme_bw(base_size = 12)
-```
-
-### Alternative Approaches
-
-In addition to the spatial linear model, we considered several different modeling approaches (all using the same explanatory variables): a nonspatial linear model, a spatial beta regression model, a spatial gamma regression model, a random forest model, and a spatial binomial model. The nonspatial linear model provided a useful baseline to compare the spatial linear model against, elucidating the impact of spatial dependence on model fit. The spatial beta regression model is a generalized linear model used to characterize proportion data between zero and one. To adhere to this restriction, total cover was 1) scaled to a proportion and 2) if exactly zero (one), set to 0.01 (0.99).  The spatial gamma regression model is a generalized linear model used to characterize skewed positive data. To adhere to this restriction, if total cover was exactly zero, it was set to 0.01. The random forest provided a useful comparison to a machine learning approach, quite different than the aforementioned statistical approaches. Finally, the binomial model is a generalized linear model used to characterize presence/absence (success/failure) data. To adhere to this restriction, total cover was 1) given a value of zero if there was no seagrass or 2) given a value of one if there was any seagrass.
-
-```{r}
-wb_tc_lm_loocv <- readRDS(here("models", "wb_tc_lm_loocv.rds"))
-wb_tc_splm_loocv <- readRDS(here("models", "wb_tc_splm_loocv.rds"))
-wb_tc_spglm_beta_loocv <- readRDS(here("models", "wb_tc_spglm_beta_loocv.rds")) * 100 # to undo scaling
-wb_tc_spglm_gamma_loocv <- readRDS(here("models", "wb_tc_spglm_gamma_loocv.rds"))
-wb_tc_lm_loocv <- readRDS(here("models", "wb_tc_lm_loocv.rds"))
-wb_tc_rf_oob <- readRDS(here("models", "wb_tc_rf_oob.rds"))
-wb_cv <- bind_rows(wb_tc_lm_loocv, wb_tc_splm_loocv, wb_tc_spglm_beta_loocv,
-                   wb_tc_spglm_gamma_loocv, wb_tc_rf_oob)
-```
-
-All six approaches found notable, negative relationships between temperature and total cover as well as notable to moderate relationships between sediment type and total cover as well as tidal range and total cover. The nonspatial linear model and spatial beta regression model found notable, generally negative relationships between turbidity and total cover. From @tbl-wb_cv, the spatial linear model and random forest had the lowest out-of-sample root-mean-squared-prediction error, followed by the generalized linear models and then by the nonspatial linear model. Random forest partial dependence plots [@greenwell2017pdp], which characterize the marginal behavior of a variable in a random forest model, suggested linear effects of the model variables to be reasonable. Given this context, we chose the spatial linear model as the final model, although it is certainly reasonable to justify other modeling choices that enforce specific, more realistic restrictions on the response distribution like the spatial beta regression model (enforcing proportions).
-```{r}
-#| label: tbl-wb_cv
-#| tbl-cap: "Wide Bay out of sample prediction metrics for the various approaches."
-wb_cv %>%
-  mutate(approach = c("LM", "SPLM", "SPGLM-Beta", "SPGLM-Gamma", "RF")) %>%
-  select(approach, bias, RMSPE) %>%
-  arrange(RMSPE) %>%
-  kable(digits = 2, col.names = c("Approach", "MBias", "RMSPE"))
-```
-
-### Limitations and Future Suggestions
-
-While the spatial linear model was useful for characterizing broad patterns related to tidal range, sediment type, temperature, and turbidity while accounting for spatial dependence, there are some limitations. First, the eReefs water quality data are modeled, not directly observed in the field, potentially propagating modeling error. Second, there are many correlated water quality variables, making it hard (for any model) to isolate the effects of each component of water quality pre- and post-flood. Third, there is a lack of baseline mean salinity in the 90 days prior to sampling, which makes it challenging to directly study the effect of mean salinity during the flood period. Fourth, there is a lack of data immediately after each flood -- nearly all of the data are after both floods, making it challenging to isolate the contribution from each flood separately. Fifth, there was no pre-flood data, making it challenging to compare against a pre-flood baseline. Sixth, there is a lack of addition data sources that could help quantify the impact of various explanatory variables on total pre and post-flood, potentially varying across both space and time. Seventh, the locations at which data were collected were not randomly sampled. Randomly sampling sites helps to guard against sampling preferentially [@diggle2010preferential] and provides more robust and representative data sources [@dumelle2022comparison].
-
-## Resilience Modeling {#sec-wb_resilience}
-
-### Model Fit
-
-### Alternative Approaches
-
-## References
-
-::: {#refs}
-:::
-
-# Appendix
