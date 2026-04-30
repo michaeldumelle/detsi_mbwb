@@ -3,6 +3,7 @@ library(here)
 library(sf)
 library(ranger)
 library(spmodel)
+library(splines)
 
 ##################
 ### Moreton Bay
@@ -170,6 +171,62 @@ mb_tc_rf_oob <- tibble(
   cor2 = cor(dat$total.cover, mb_tc_rf_mod$predictions)^2
 )
 saveRDS(mb_tc_rf_oob, file = here("models", "mb_tc_rf_oob.rds"))
+
+
+#############
+### Resilience
+#############
+dat$z_splm <- residuals(mb_tc_splm_mod)
+
+mb_tc_splm_form_res <- z_splm ~ dom.spp + sg.rich + bs(coral.msq, degree = 2) + seagr.msq +
+  u.mang.msq + bs(shell.msq, degree = 2) + bs(hab.count, degre = 2) + 
+  bs(coral.dist.m, degree = 3) + bs(seag.dist.m, degree = 2) +
+  bs(u.mg.dist, degree = 2) + bs(shell.dist.m, degree = 2) +
+  bs(bath.m.mean, degree = 2) + bs(rslope.dg.mean, degree = 2)
+
+set.seed(0)
+mb_tc_splm_mod_res <- splm(
+  formula = mb_tc_splm_form_res,
+  data = dat,
+  spcov_type = "exponential",
+  local = list(size = 500),
+  random = ~ ehmp.subzone
+)
+
+pred_grid <- tibble(
+  dom.spp = "ZMHU",
+  sg.rich = mean(dat$sg.rich),
+  coral.msq = mean(dat$coral.msq),
+  seagr.msq = mean(dat$seagr.msq),
+  u.mang.msq = mean(dat$u.mang.msq),
+  shell.msq = mean(dat$shell.msq),
+  hab.count = mean(dat$hab.count),
+  coral.dist.m = mean(dat$coral.dist.m),
+  seag.dist.m = mean(dat$seag.dist.m),
+  u.mg.dist = mean(dat$u.mg.dist),
+  shell.dist.m = mean(dat$shell.dist.m),
+  bath.m.mean = mean(dat$bath.m.mean),
+  rslope.dg.mean = mean(dat$rslope.dg.mean),
+  ehmp.subzone = "Southern Bay",
+  xc = 75000, yc = 150000
+) %>% st_as_sf(crs = 3113, coords = c("xc", "yc"))
+
+pred_grid <- pred_grid[rep(1, 1000), ]
+pred_grid$rslope.dg.mean <- seq(min(dat$rslope.dg.mean), max(dat$rslope.dg.mean), length.out = 1000)
+preds_out <- predict(mb_tc_splm_mod_res, newdata = pred_grid, local = TRUE) # unhelpful error if no coords
+plot(x = pred_grid$rslope.dg.mean, y = preds_out)
+
+dat$z_rf <- oob_errors
+mb_tc_rf_form_res <- z_splm ~ dom.spp + sg.rich + coral.msq + seagr.msq +
+  u.mang.msq + shell.msq + hab.count + coral.dist.m + seag.dist.m +
+  u.mg.dist + shell.dist.m + bath.m.mean + rslope.dg.mean + ehmp.subzone
+set.seed(0)
+mb_tc_rf_mod_res <- ranger(
+  formula = mb_tc_rf_form_res,
+  data = st_drop_geometry(dat),
+  importance = "impurity",
+  keep.inbag  = TRUE
+)
 
 ##################
 ### Wide Bay
