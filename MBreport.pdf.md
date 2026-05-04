@@ -28,22 +28,11 @@ editor_options:
 bibliography: references.bib
 ---
 
-```{r}
-# loading software
-library(tidyverse)
-library(here)
-library(ranger)
-library(sf)
-library(knitr)
-library(broom)
-library(spmodel)
-library(pdp)
-library(emmeans)
-library(janitor)
-library(kableExtra)
-library(splines)
-library(patchwork)
-```
+
+::: {.cell}
+
+:::
+
 
 # Executive Summary
 
@@ -81,23 +70,13 @@ $$
 $$ {#eq-splm3}
 where $\mathbf{Z}$ is a random effect design matrix (dimension $n \times k$) that indexes each of the $k$ random effects in $\mathbf{u}$. For more information about specific forms of various spatial covariance functions, see @schabenberger2017statistical and @zimmerman2024spatial.
 
-```{r}
-#| label: fig-spcov_fns
-#| fig-cap: "Three spatial covariance functions that represent different spatial dependence behavior."
-#| out-width: "75%"
-range <- 50
-spcor_dat <- tibble(
-  h = seq(0, range*2),
-  Exponential = exp(-h/range),
-  Gaussian = exp(-h^2/range^2),
-  Spherical = (1 - 1.5*h/range + 0.5*h^3/range^3)*(h <= range)
-) %>%
-  rename(Distance = h) %>%
-  pivot_longer(cols = c(-Distance), names_to = "Function", values_to = "Spatial Covariance")
-ggplot(spcor_dat, aes(x = Distance, y = `Spatial Covariance`, color = Function, linetype = Function)) +
-  geom_line(linewidth = 2) +
-  theme_bw(base_size = 14)
-```
+
+::: {.cell}
+::: {.cell-output-display}
+![Three spatial covariance functions that represent different spatial dependence behavior.](MBreport_files/figure-pdf/fig-spcov_fns-1.pdf){#fig-spcov_fns width=75%}
+:::
+:::
+
 
 Like the traditional linear model, the spatial linear model can capture complex nonlinearities in the data through the use of interaction effects [@faraway2002practical; @lenth2025emmeans], splines [@chambers1992statistical; @ruppert2003semiparametric], additive models [@wood2017generalized; @pedersen2019hierarchical], and penalized regression models like the ridge and lasso [@tibshirani1996regression]. Generally, this is accomplished by leveraging _basis functions_ that break down nonlinear behavior into a set of additive linear components that may include penalty terms which guard against overfitting. Furthermore, there is no assumption that $y_i$ itself is normally distributed; rather, distributional assumptions are placed on the random errors after incorporating the slope parameters. This clarification implies the spatial (and nonspatial) linear models can be quite effective at modeling a range of data that are not normally distributed. For highly nonnormal data, tools like generalized linear models, which we discuss later, can be helpful. Finally, under general conditions, the slope parameters of the spatial (and nonspatial) linear models are approximately normally distributed with a large sample size (see @casella2024statistical for a general justification via the Central Limit Theorem and @zhang2005towards for nuances regarding spatial data). This is beneficial because it justifies valid hypothesis testing on the slope coefficients (often of primary ecological interest), no matter the distribution of the data (given certain assumptions are satisfied).
 
@@ -109,113 +88,121 @@ g(\mu_i) = \beta_0 + \beta_1x_{1, i} + \beta_2x_{2, i} + ... + \beta_p x_{p, i} 
 $$ {#eq-spglm1}
 where $g(\mu_i)$ is a "link function" that links the distribution of $y_i$ to a linear function of its mean, $\mu_i$. Common link functions include the log link for count and skewed data and the logit link for binomial and proportion data (@tbl-glm-families). Using the same argument as for spatial linear models, nonspatial random effects can be added to spatial generalized linear models.
 
-```{r}
-#| label: tbl-glm-families
-#| tbl-cap: "Common generalized linear model families, link functions, and appropriate data types."
 
-glm_table <- data.frame(
-  Family = c("Binomial", "Poisson", "Negative Binomial",
-             "Beta", "Gamma", "Inverse Gaussian"),
-  Link_Function = c("$f(\\mu) = \\log(\\mu / (1 - \\mu))$",
-                    "$f(\\mu) = \\log(\\mu)$",
-                    "$f(\\mu) = \\log(\\mu)$",
-                    "$f(\\mu) = \\log(\\mu / (1 - \\mu))$",
-                    "$f(\\mu) = \\log(\\mu)$",
-                    "$f(\\mu) = \\log(\\mu)$"),
-  Link_Name = c("Logit", "Log", "Log", "Logit", "Log", "Log"),
-  Data_Type = c("Binary; Binary Count", "Count", "Count",
-                "Proportion", "Skewed", "Skewed")
-)
+::: {#tbl-glm-families .cell tbl-cap='Common generalized linear model families, link functions, and appropriate data types.'}
+::: {.cell-output-display}
 
-kable(glm_table,
-      col.names  = c("Family", "Link Function", "Link Name", "Data Type"),
-      escape     = FALSE,
-      booktabs   = TRUE)
-```
+
+|Family            |Link Function                    |Link Name |Data Type            |
+|:-----------------|:--------------------------------|:---------|:--------------------|
+|Binomial          |$f(\mu) = \log(\mu / (1 - \mu))$ |Logit     |Binary; Binary Count |
+|Poisson           |$f(\mu) = \log(\mu)$             |Log       |Count                |
+|Negative Binomial |$f(\mu) = \log(\mu)$             |Log       |Count                |
+|Beta              |$f(\mu) = \log(\mu / (1 - \mu))$ |Logit     |Proportion           |
+|Gamma             |$f(\mu) = \log(\mu)$             |Log       |Skewed               |
+|Inverse Gaussian  |$f(\mu) = \log(\mu)$             |Log       |Skewed               |
+
+
+:::
+:::
+
 
 Spatial models are complicated, both theoretically and computationally. This has contributed to their relative lack of use in the ecological community. However, recent advances in open-source software have made spatial models more accessible to ecologists who have strong subject matter expertise but may lack sufficient statistical background or computational skills to implement them from scratch. One such advancement is the `spmodel` **R** package [@dumelle2023spmodel], which emulates base-**R** functions like `lm()` and `glm()` to account for spatial dependence via `splm()` and `spglm()`, respectively. Familiar **R** functions like `summary()` and `predict()` can be used directly on models fit via `spmodel`. Importantly, `spmodel` also has tools for spatial random forest residual modeling [@fox2020comparing], applications to large data of several thousand observations via spatial indexing [@ver2023indexing], and cross validation [@stone1974cross; @roberts2017cross].
 
 # The Data
 
-```{r}
-#| label: read-mb
-dat <- read_sf(here("data", "MBsub_03-31-2026.gpkg"))
 
-# read in bay shapefiles
-bay <- read_sf(here("data", "Moreton_Bay_marine_park_zoning_2008.shp")) %>%
-  st_transform(crs = 3113)
-```
+::: {.cell}
+
+:::
+
 
 We started with just over 10,000 seagrass cover observations in Moreton Bay across three financial years (2020-2021, 2022-2023, and 2023-2024). eReefs data [@steven2019ereefs] with modeled water quality covariates related to turbidity and salinity were only available at 7,657 observations. Because one of our research questions involved connecting water quality covariates to management actions, we proceed with this subset of 7,657 observations for modeling. Of the 7,657 observations, 1,995 were in 2020-2021 (pre-flood), 3,329 were in 2022-2023, and 2,333 were in 2023-2024 (@tbl-n_fy_mb). 
 
-```{r}
-#| label: tbl-n_fy_mb
-#| tbl-cap: "Total seagrass observations in Moreton Bay by financial year."
-dat %>%
-  tabyl(fy) %>%
-  adorn_totals(where = "row") %>%
-  adorn_pct_formatting() %>%
-  kable(
-    col.names = c("Financial Year", "Sample Size", "Percent (of Total)"),
-    format.args = list(big.mark = ",")
-  )
-```
+
+::: {#tbl-n_fy_mb .cell tbl-cap='Total seagrass observations in Moreton Bay by financial year.'}
+::: {.cell-output-display}
+
+
+|Financial Year | Sample Size|Percent (of Total) |
+|:--------------|-----------:|:------------------|
+|2020-2021      |       1,995|26.1%              |
+|2022-2023      |       3,329|43.5%              |
+|2023-2024      |       2,333|30.5%              |
+|Total          |       7,657|100.0%             |
+
+
+:::
+:::
+
 
 # Water Quality and Geographic Modeling {#sec-wq_mod}
 
 Total cover is a percentage that ranges from 0 (no seagrass) to 100 (seagrass entirely contained in an area). @fig-cover_fy_mb shows total cover by financial year throughout the Bay. Total cover tends to be largest along the eastern shoreline of the Bay and lowest in the middle of the Bay. @fig-cover_fy_mb also reveals that 2022-2023 had by far the most sampling in the middle of the Bay.
 
 
-```{r}
-#| fig-width: 8
-#| fig-height: 8
-#| label: fig-cover_fy_mb
-#| fig-cap: "Total seagrass cover in Moreton Bay by financial year."
-dat1 <- dat %>%
-  arrange(total.cover, fy)
-ggplot(dat1) +
-  geom_sf(data = bay, fill = "white") +
-  geom_sf(data = dat1, aes(color = total.cover), size = 0.8) +
-  scale_color_viridis_c(name = "Cover") +
-  scale_x_continuous(breaks = c(153.1, 153.3, 153.5)) +
-  facet_wrap(~ fy) +
-  theme_bw(base_size = 14) +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
-```
+
+::: {.cell}
+::: {.cell-output-display}
+![Total seagrass cover in Moreton Bay by financial year.](MBreport_files/figure-pdf/fig-cover_fy_mb-1.pdf){#fig-cover_fy_mb}
+:::
+:::
+
 
 We considered for modeling several water quality and geographic covariates. @tbl-wq_vars_mb summarizes the water quality variables, which included both ambient and flood-related metrics related to turbidity, salinity, and temperature. The "Variable" column indicates the water quality variable turbidity, salinity, or temperature. The "Flood" variable indicates whether the measurement corresponds to a flood variable or not. The "Period" variable indicates the prior period (in days) relative to sampling or indicates whether the variable corresponds to a flood event. The "Type" column is the type of statistic, either a mean, minimum, maximum, number of days above (or below) a cutoff during "Period", or a maximum spell (i.e., duration) above (or below) a cutoff during "Period". The "Included" variable indicates whether the variable was included as a covariate in the final spatial model. We included only a few variables in the final model: mean turbidity in the 90 days prior to sampling, mean turbidity during the flood event, and mean temperature in the 90 days prior to sampling. We only included a single turbidity metric prior to sampling because these variables were all quite correlated with one another, making it hard for the model to tease apart signals. We believed 90 day mean turbidity prior to sampling to be the most accurate "running average" of turbidity prior to sampling. We used a similar rationale to select only a single turbidity metric from the flood and a single temperature metric prior to sampling. We omitted a flood salinity metric primarily because we lacked data for salinity prior to sampling, thus it would be challenging to establish a "baseline" for salinity in order to tease apart prior to sampling effects from flood effects (moreover, they did not seem strongly related to total cover). We provide more detail regarding the modeling in @sec-mb_model.
 
-```{r}
-#| label: tbl-wq_vars_mb
-#| tbl-cap: "Moreton Bay water quality variables considered for modeling."
-turb_vars <- tibble(
-  Variable = rep("Turbidity (NTU)", 20),
-  Flood = c(rep("No", 12), rep("Yes", 8)),
-  Period = c(rep(c("7", "30", "90"), times = 4), rep("Flood", 8)),
-  Type = c(rep("Mean", 3), rep("Above", 9), rep("Above", 3), rep("Duration", 3), c("Mean", "Max")),
-  Cutoff = c(rep("NA", 3), rep(c("3", "5", "6"), each = 3), rep(c("3", "5", "6"), times = 2), rep("NA", 2))
-) %>%
-  mutate(Included = if_else(row_number() %in% c(3, 19), "Yes", "No"))
-sal_vars <- tibble(
-  Variable = rep("Salinity (PSU)", 17),
-  Flood = c(rep("No", 9), rep("Yes", 8)),
-  Period = c(rep(c("7", "30", "90"), times = 3), rep("Flood", 8)),
-  Type = c(rep("Below", 9), rep("Below", 3), rep("Duration", 3), c("Mean", "Min")),
-  Cutoff = c(rep(c("20", "25", "30"), each = 3), rep(c("20", "25", "30"), times = 2), rep("NA", 2))
-) %>%
-  mutate(Included = if_else(row_number() %in% c(0), "Yes", "No"))
-temp_vars <- tibble(
-  Variable = rep("Temperature (deg C)", 3),
-  Flood = c(rep("No", 3)),
-  Period = c(rep(c("7", "30", "90"), times = 1)),
-  Type = c(rep("Mean", 3)),
-  Cutoff = c(rep("NA", 3))
-) %>%
-  mutate(Included = if_else(row_number() %in% c(3), "Yes", "No"))
-wq_vars <- bind_rows(turb_vars, sal_vars, temp_vars)
-wq_vars %>%
-  kable()
-```
+
+::: {#tbl-wq_vars_mb .cell tbl-cap='Moreton Bay water quality variables considered for modeling.'}
+::: {.cell-output-display}
+
+
+|Variable            |Flood |Period |Type     |Cutoff |Included |
+|:-------------------|:-----|:------|:--------|:------|:--------|
+|Turbidity (NTU)     |No    |7      |Mean     |NA     |No       |
+|Turbidity (NTU)     |No    |30     |Mean     |NA     |No       |
+|Turbidity (NTU)     |No    |90     |Mean     |NA     |Yes      |
+|Turbidity (NTU)     |No    |7      |Above    |3      |No       |
+|Turbidity (NTU)     |No    |30     |Above    |3      |No       |
+|Turbidity (NTU)     |No    |90     |Above    |3      |No       |
+|Turbidity (NTU)     |No    |7      |Above    |5      |No       |
+|Turbidity (NTU)     |No    |30     |Above    |5      |No       |
+|Turbidity (NTU)     |No    |90     |Above    |5      |No       |
+|Turbidity (NTU)     |No    |7      |Above    |6      |No       |
+|Turbidity (NTU)     |No    |30     |Above    |6      |No       |
+|Turbidity (NTU)     |No    |90     |Above    |6      |No       |
+|Turbidity (NTU)     |Yes   |Flood  |Above    |3      |No       |
+|Turbidity (NTU)     |Yes   |Flood  |Above    |5      |No       |
+|Turbidity (NTU)     |Yes   |Flood  |Above    |6      |No       |
+|Turbidity (NTU)     |Yes   |Flood  |Duration |3      |No       |
+|Turbidity (NTU)     |Yes   |Flood  |Duration |5      |No       |
+|Turbidity (NTU)     |Yes   |Flood  |Duration |6      |No       |
+|Turbidity (NTU)     |Yes   |Flood  |Mean     |NA     |Yes      |
+|Turbidity (NTU)     |Yes   |Flood  |Max      |NA     |No       |
+|Salinity (PSU)      |No    |7      |Below    |20     |No       |
+|Salinity (PSU)      |No    |30     |Below    |20     |No       |
+|Salinity (PSU)      |No    |90     |Below    |20     |No       |
+|Salinity (PSU)      |No    |7      |Below    |25     |No       |
+|Salinity (PSU)      |No    |30     |Below    |25     |No       |
+|Salinity (PSU)      |No    |90     |Below    |25     |No       |
+|Salinity (PSU)      |No    |7      |Below    |30     |No       |
+|Salinity (PSU)      |No    |30     |Below    |30     |No       |
+|Salinity (PSU)      |No    |90     |Below    |30     |No       |
+|Salinity (PSU)      |Yes   |Flood  |Below    |20     |No       |
+|Salinity (PSU)      |Yes   |Flood  |Below    |25     |No       |
+|Salinity (PSU)      |Yes   |Flood  |Below    |30     |No       |
+|Salinity (PSU)      |Yes   |Flood  |Duration |20     |No       |
+|Salinity (PSU)      |Yes   |Flood  |Duration |25     |No       |
+|Salinity (PSU)      |Yes   |Flood  |Duration |30     |No       |
+|Salinity (PSU)      |Yes   |Flood  |Mean     |NA     |No       |
+|Salinity (PSU)      |Yes   |Flood  |Min      |NA     |No       |
+|Temperature (deg C) |No    |7      |Mean     |NA     |No       |
+|Temperature (deg C) |No    |30     |Mean     |NA     |No       |
+|Temperature (deg C) |No    |90     |Mean     |NA     |Yes      |
+
+
+:::
+:::
+
 
 
 @tbl-geo_vars_mb summarizes the geographic variables, which have the following structure:
@@ -228,68 +215,82 @@ wq_vars %>%
 * The "Growing Season" variable has two levels: Growing (September - December) and Not Growing (January - August). 
 * The EHMP subzone variable has eleven levels: Bramble Bay, Broadwater, Central Bay, Deception Bay, Eastern Banks, Moreton Bay Open Coastal Waters, North-Eastern Moreton Bay, Northern Banks Open Coastal Waters, South-Eastern Moreton Bay, Southern Bay, and Waterloo Bay (@fig-ehmp_subzone). 
 
-```{r}
-#| label: tbl-geo_vars_mb
-#| tbl-cap: "Moreton Bay geographic variables considered for modeling."
-geo_vars <- tibble(
-  Variable = c("Sediment Type", "Tidal Range", "Years Since Flood",
-  "Nearest River", "Distance to Outlet", "Growing Season", "EHMP Subzone"), 
-  Effect = c(rep("Fixed", 6), "Random"),
-  Included = c(rep("Yes", 3), rep("No", 3), "Yes")
-)
-geo_vars %>%
-  kable()
-```
+
+::: {#tbl-geo_vars_mb .cell tbl-cap='Moreton Bay geographic variables considered for modeling.'}
+::: {.cell-output-display}
+
+
+|Variable           |Effect |Included |
+|:------------------|:------|:--------|
+|Sediment Type      |Fixed  |Yes      |
+|Tidal Range        |Fixed  |Yes      |
+|Years Since Flood  |Fixed  |Yes      |
+|Nearest River      |Fixed  |No       |
+|Distance to Outlet |Fixed  |No       |
+|Growing Season     |Fixed  |No       |
+|EHMP Subzone       |Random |Yes      |
+
+
+:::
+:::
+
 
 
 From @tbl-geo_vars_mb, we kept the sediment type, tidal range, and years since flood variables as covariates in the model. The nearest river and distance to nearest outlet variables were removed, as they did not seem related to total cover. We removed growing season from the model after determining that it likely is not ecologically useful, as a simple month proxy likely does not adequately account for the complexities of the more nuanced aspects of seagrass growth with time. We used EHMP subzone as a random effect to account for within-subzone correlation that may impact the relationships among total cover and the remaining variables. We provide more detail regarding the statistical modeling in @sec-mb_model.
 
-```{r}
-#| fig-width: 8
-#| fig-height: 8
-#| label: fig-ehmp_subzone
-#| fig-cap: "Observations and their EHMP Subzones in Moreton Bay."
-ggplot(dat) +
-  geom_sf(data = bay, fill = "white") +
-  geom_sf(data = dat, aes(color = ehmp.subzone), size = 0.5) +
-  scale_color_discrete(name = "EHMP Subzone") +
-  scale_x_continuous(breaks = c(153.1, 153.3, 153.5)) +
-  theme_bw(base_size = 14) +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
-```
+
+::: {.cell}
+::: {.cell-output-display}
+![Observations and their EHMP Subzones in Moreton Bay.](MBreport_files/figure-pdf/fig-ehmp_subzone-1.pdf){#fig-ehmp_subzone}
+:::
+:::
+
 
 ## Model Fit {#sec-mb_model}
 
-```{r}
-#| label: tbl-mb_tc_splm_vars
-#| tbl-cap: "Variables in the final Moreton Bay total cover model, their type (numeric or categorical), and if categorical, the number of unique levels."
-mb_tc_splm_vars <- tibble(
-  Variable = c("90 Day Temperature", "90 Day Turbidity", "Mean Flood Turbidity/Years Since Flood^2", "Sediment Type", "Tidal Range"), 
-  Type = c(rep("Numeric", 3), rep("Categorical", 2)),
-  `No. Levels` = c(rep("NA", 3), "6", "3")
-)
-mb_tc_splm_vars %>%
-  kable()
-```
 
-```{r}
-# moreton bay tc model
-mb_tc_splm_mod <- readRDS(here("models", "mb_tc_splm_mod.rds"))
-```
+::: {#tbl-mb_tc_splm_vars .cell tbl-cap='Variables in the final Moreton Bay total cover model, their type (numeric or categorical), and if categorical, the number of unique levels.'}
+::: {.cell-output-display}
+
+
+|Variable                                 |Type        |No. Levels |
+|:----------------------------------------|:-----------|:----------|
+|90 Day Temperature                       |Numeric     |NA         |
+|90 Day Turbidity                         |Numeric     |NA         |
+|Mean Flood Turbidity/Years Since Flood^2 |Numeric     |NA         |
+|Sediment Type                            |Categorical |6          |
+|Tidal Range                              |Categorical |3          |
+
+
+:::
+:::
+
+
+
+::: {.cell}
+
+:::
+
 
 To describe total seagrass cover in Moreton Bay, our final model was a spatial linear model (@eq-splm1) with the following explanatory variables: tidal range, sediment type, 90 day mean temperature (prior to sampling), pre- vs post-flood, years since the flood, 90 day turbidity (prior to sampling), and mean turbidity during the flood period scaled by time since the flood squared (@tbl-mb_tc_splm_vars). We scaled mean turbidity during the flood period so that the effect of turbidity during the flood event was allowed to decay with time since the flood. Intuitively, this means that with time since the flood, the impact of turbidity during the flood event is lessened. We also considered scaling by time since flood (not squared), which produced similar results. Furthermore, we used an exponential spatial covariance function and included a random effect for EHMP subzone. We fit the model using restricted maximum likelihood via the `splm()` function in `spmodel`.
 
-```{r}
-#| label: tbl-mb-covariates
-#| tbl-cap: "ANOVA table of covariates in the Moreton Bay water quality and geographic model."
-mb_tc_splm_mod %>%
-  anova() %>%
-  tidy() %>%
-  filter(effects != "(Intercept)") %>%
-  arrange(desc(statistic)) %>%
-  mutate(effects = c("Tidal Range", "Sediment Type", "90 Day Temperature", "Mean Flood Turbidity/Years Since Flood^2", "90 Day Turbidity")) %>%
-  kable(digits = 3, col.names = c("Effects", "df", "Chi-sq", "p.value"))
-```
+
+::: {#tbl-mb-covariates .cell tbl-cap='ANOVA table of covariates in the Moreton Bay water quality and geographic model.'}
+::: {.cell-output-display}
+
+
+|Effects                                  | df|  Chi-sq| p.value|
+|:----------------------------------------|--:|-------:|-------:|
+|Tidal Range                              |  2| 608.900|   0.000|
+|Sediment Type                            |  5| 113.720|   0.000|
+|90 Day Temperature                       |  1|  16.967|   0.000|
+|Mean Flood Turbidity/Years Since Flood^2 |  1|  11.966|   0.001|
+|90 Day Turbidity                         |  1|   7.854|   0.005|
+
+
+:::
+:::
+
 
 @tbl-mb-covariates shows the results from an analysis of variance applied to the fitted model. All explanatory variables had large test statistics and small $p$-values ($p$-value $<$ 0.01); here are some relevant takeaways:
 
@@ -299,207 +300,155 @@ mb_tc_splm_mod %>%
 * Mean Flood Turbidity/(Years Since Flood)$^2$: A one-unit increase in mean turbidity during the flood is associated with a decrease in average total cover by 2.05% points/(Years Since Flood)$^2$ (@fig-mb_turb_90d_fld).
 * 90 Day Turbidity: A one-unit increase in 90 day turbidity is associated with a decrease in average total cover by 7.18% points (@fig-mb_turb_90d_fld).
 
-```{r}
-pred_grid <- tibble(
-  depth.range = "intertidal",
-  sed.type = "Sand",
-  temp.90d.mn = mean(dat$temp.90d.mn),
-  turb.90d.mn = mean(dat$turb.90d.mn),
-  turb.fld.mn = mean(dat$turb.fld.mn),
-  yr.flood.recip2 = 1,
-  xc = 75000, yc = 150000
-) %>% 
-  st_as_sf(crs = 3113, coords = c("xc", "yc"))
 
-n_grid <- 200
+::: {.cell}
 
-pred_grid_turb.90d.mn <- pred_grid[rep(1, n_grid), ]
-pred_grid_turb.90d.mn$turb.90d.mn <- seq(0, 2, length.out = n_grid)
-pred_grid_turb.90d.mn[, c("fit", "lwr", "upr")] <- predict(mb_tc_splm_mod, newdata = pred_grid_turb.90d.mn, local = TRUE, interval = "confidence")
-pred_grid_turb.fld.mn <- pred_grid[rep(1, n_grid), ]
-pred_grid_turb.fld.mn$turb.fld.mn <- seq(0, 2, length.out = n_grid)
-pred_grid_turb.fld.mn[, c("fit", "lwr", "upr")] <- predict(mb_tc_splm_mod, newdata = pred_grid_turb.fld.mn, local = TRUE, interval = "confidence")
-```
-
-```{r}
-#| label: fig-mb_turb_90d_fld
-#| fig-cap: "Average total cover as a function of 90 day mean turbidity (left) and flood turbidity (right). Estimates (and confidence intervals) were evaluated at one year post flood, at the means of all other numeric variables, and for the intertidal range and Sand sediment type (the same trends occur for both variables among the remaining species and subzones)."
-p1 <- ggplot(pred_grid_turb.90d.mn, aes(x = turb.90d.mn)) +
-  geom_line(aes(y = fit)) +
-  geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = 0.4, fill = "grey") +
-  labs(x = "Turbidity (90 Day)", y = "Average Total Cover") +
-  theme_bw(base_size = 14)
+:::
 
 
-p2 <- ggplot(pred_grid_turb.fld.mn, aes(x = turb.fld.mn)) +
-  geom_line(aes(y = fit)) +
-  geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = 0.4, fill = "grey") +
-  labs(x = "Turbidity (Flood)", y = "Average Total Cover") +
-  theme_bw(base_size = 14)
 
-p1 + p2
-```
+::: {.cell}
+::: {.cell-output-display}
+![Average total cover as a function of 90 day mean turbidity (left) and flood turbidity (right). Estimates (and confidence intervals) were evaluated at one year post flood, at the means of all other numeric variables, and for the intertidal range and Sand sediment type (the same trends occur for both variables among the remaining species and subzones).](MBreport_files/figure-pdf/fig-mb_turb_90d_fld-1.pdf){#fig-mb_turb_90d_fld}
+:::
+:::
+
 
 
 Together, these results can inform triggers for management responses in both ambient and flood conditions. For example, given the decrease in total cover with turbidity, one could propose a specific turbidity threshold above which management intervention is warranted. Note that the estimated marginal means for tidal range and sediment type were calculated using the `emmeans` **R** package [@lenth2025emmeans]. 
 
 We may inspect model diagnostics to better understand the overall model fit. Here we discuss how to partition the model into different components of variability, infer decay behavior of spatial autocorrelation, analyze standardized residuals to assess model assumptions, and identify influential observations that have a sizable impact on model fit. From @tbl-mb_varcomp, we see that of the total model variability, 11.2% is attributable to the explanatory variables (this quantity is sometimes called the Pseudo R-squared), 31.6% is attributable to the spatial random error, 7.3% is attributable to the EHMP subzone, and the remaining variability is independent random error. The estimated exponential spatial range ($\phi$) is 745.5 meters, which suggests two total cover observations are approximately (spatially) uncorrelated at a distance of $3\phi \approx 2$km, or two kilometers. While the raw residuals will inform our resilience modeling in @sec-mb_resilience, we can check certain model assumptions using the standardized residuals, which have been decorrelated. Generally, the standardized residuals are centered around zero, though there is a slight right skew suggesting some observed total cover values are larger than expected (according to the model). Observations are called "influential" if they highly influence model fit. Influence is often measured via Cook's distance, and no observations exceed the often-used Cook's distance threshold value of one [@cook1982residuals].
 
-```{r}
-#| label: tbl-mb_varcomp
-#| tbl-cap: "Variance components in the Moreton Bay water quality and geographic model."
-mb_tc_splm_mod %>%
-  varcomp() %>%
-  mutate(varcomp = c("Covariates", "Spatial Effect", "Independent Error", "EHMP Subzone")) %>%
-  adorn_pct_formatting() %>%
-  mutate(val = c(NA, coef(mb_tc_splm_mod, type = "spcov")[1:3])) %>%
-  kable(digits = 1, col.names = c("Variance Component", "Percent (of Total Variability)", "Parameter Value"))
-```
+
+::: {#tbl-mb_varcomp .cell tbl-cap='Variance components in the Moreton Bay water quality and geographic model.'}
+::: {.cell-output-display}
+
+
+|Variance Component |Percent (of Total Variability) | Parameter Value|
+|:------------------|:------------------------------|---------------:|
+|Covariates         |11.2%                          |              NA|
+|Spatial Effect     |31.6%                          |           182.1|
+|Independent Error  |49.9%                          |           287.5|
+|EHMP Subzone       |7.3%                           |           745.5|
+
+
+:::
+:::
+
 
 ## Block Kriging
 
 A tremendous benefit of using the spatial linear model is that block Kriging can be directly applied to predict the mean total seagrass cover bay-wide for any combination of explanatory variables and geographic regions, even if these variables were not directly used in modeling. @fig-bk_mb_ehmp and @fig-bk_mb_zone show that there are several EHMP subzones and conservation zones that have recovered to pre-flood levels (e.g., Deception Bay, Marine National Park Zone), while others have not (e.g., Southern Bay, General Use Zone). While EHMP subzone was included in the model as a random effect, conservation zone type was not -- via block Kriging, we can still quantify broad trends in total seagrass cover. @fig-bk_mb_tidal shows that total seagrass cover is recovering less effectively in the intertidal range than the shallow or deep subtidal ranges, while @fig-bk_mb_all shows that total seagrass cover is recovering bay-wide since the flood. Another useful application of block Kriging is scenario modeling, which can be used to characterize the impact of various future changes to broad-scale climatic patterns.
 
-```{r}
-#| fig-width: 8
-#| fig-height: 10
-#| label: fig-bk_mb_ehmp
-#| fig-cap: "Average total cover predictions by EHMP subzone. Red dots indicate the mean from the raw data. Black dots indicate the predicted mean in the region alongside a prediction interval."
-bk_mb_ehmp <- readRDS(here("models", "bk_mb_ehmp.rds"))
-ggplot(bk_mb_ehmp, aes(x = fy, y = fit)) +
-  geom_point() +
-  geom_errorbar(aes(ymin = lwr, ymax = upr), width = 0.3) +
-  geom_point(aes(x = fy, y = raw_mean), color = "red") +
-  facet_wrap(~ ehmp.subzone, ncol = 2) +
-  labs(x = "Financial Year", y = "Predicted Mean Total Cover") +
-  theme_bw(base_size = 12)
-```
 
-```{r}
-#| fig-width: 8
-#| fig-height: 10
-#| label: fig-bk_mb_zone
-#| fig-cap: "Average total cover predictions by conservation zone. Red dots indicate the mean from the raw data. Black dots indicate the predicted mean in the region alongside a prediction interval."
-bk_mb_zone <- readRDS(here("models", "bk_mb_zone.rds"))
-ggplot(bk_mb_zone, aes(x = fy, y = fit)) +
-  geom_point() +
-  geom_errorbar(aes(ymin = lwr, ymax = upr), width = 0.3) +
-  geom_point(aes(x = fy, y = raw_mean), color = "red") +
-  facet_wrap(~ zone.type, ncol = 2) +
-  labs(x = "Financial Year", y = "Predicted Mean Total Cover") +
-  theme_bw(base_size = 12)
-```
+::: {.cell}
+::: {.cell-output-display}
+![Average total cover predictions by EHMP subzone. Red dots indicate the mean from the raw data. Black dots indicate the predicted mean in the region alongside a prediction interval.](MBreport_files/figure-pdf/fig-bk_mb_ehmp-1.pdf){#fig-bk_mb_ehmp}
+:::
+:::
 
-```{r}
-#| fig-width: 8
-#| fig-height: 6
-#| label: fig-bk_mb_tidal
-#| fig-cap: "Average total cover predictions by tidal range. Red dots indicate the mean from the raw data. Black dots indicate the predicted mean in the region alongside a prediction interval."
-bk_mb_tidal <- readRDS(here("models", "bk_mb_tidal.rds"))
-ggplot(bk_mb_tidal, aes(x = fy, y = fit)) +
-  geom_point() +
-  geom_errorbar(aes(ymin = lwr, ymax = upr), width = 0.3) +
-  geom_point(aes(x = fy, y = raw_mean), color = "red") +
-  facet_wrap(~ depth.range, ncol = 2) +
-  labs(x = "Financial Year", y = "Predicted Mean Total Cover") +
-  theme_bw(base_size = 12)
-```
 
-```{r}
-#| fig-width: 4
-#| fig-height: 3
-#| label: fig-bk_mb_all
-#| fig-cap: "Average total cover predictions in Moreton Bay. Red dots indicate the mean from the raw data. Black dots indicate the predicted mean in the region alongside a prediction interval."
-bk_mb_all <- readRDS(here("models", "bk_mb_all.rds"))
-ggplot(bk_mb_all, aes(x = fy, y = fit)) +
-  geom_point() +
-  geom_errorbar(aes(ymin = lwr, ymax = upr), width = 0.3) +
-  geom_point(aes(x = fy, y = raw_mean), color = "red") +
-  labs(x = "Financial Year", y = "Predicted Mean Total Cover") +
-  theme_bw(base_size = 12)
-```
+
+::: {.cell}
+::: {.cell-output-display}
+![Average total cover predictions by conservation zone. Red dots indicate the mean from the raw data. Black dots indicate the predicted mean in the region alongside a prediction interval.](MBreport_files/figure-pdf/fig-bk_mb_zone-1.pdf){#fig-bk_mb_zone}
+:::
+:::
+
+
+
+::: {.cell}
+::: {.cell-output-display}
+![Average total cover predictions by tidal range. Red dots indicate the mean from the raw data. Black dots indicate the predicted mean in the region alongside a prediction interval.](MBreport_files/figure-pdf/fig-bk_mb_tidal-1.pdf){#fig-bk_mb_tidal}
+:::
+:::
+
+
+
+::: {.cell}
+::: {.cell-output-display}
+![Average total cover predictions in Moreton Bay. Red dots indicate the mean from the raw data. Black dots indicate the predicted mean in the region alongside a prediction interval.](MBreport_files/figure-pdf/fig-bk_mb_all-1.pdf){#fig-bk_mb_all}
+:::
+:::
+
 
 ## Alternative Approaches
 
 In addition to the spatial linear model, we considered several different modeling approaches (all using the same explanatory variables): a nonspatial linear model, a spatial beta regression model, a spatial gamma regression model, and a random forest model. The nonspatial linear model provided a useful baseline to compare the spatial linear model against, elucidating the impact of spatial dependence on model fit. The spatial beta regression model is a generalized linear model used to characterize proportion data between zero and one. To adhere to this restriction, total cover was 1) scaled to a proportion and 2) if exactly zero (one), set to 0.01 (0.99).  The spatial gamma regression model is a generalized linear model used to characterize skewed positive data. To adhere to this restriction, if total cover was exactly zero, it was set to 0.01. Finally, the random forest provided a useful comparison to a machine learning approach, quite different than the aforementioned statistical approaches. We characterized the directionality of random forest effects using partial dependence plots (@fig-rf_turb).
 
-```{r}
-#| label: fig-rf_turb
-#| fig-cap: "Random forest partial dependence for total cover as a function of 90 day mean turbidity."
-#| out-width: "50%"
-mb_tc_rf_mod <- readRDS(file = here("models", "mb_tc_rf_mod.rds"))
-pred.grid <- tibble(turb.90d.mn = seq(0, 2, length.out = 16))
-pd <- partial(mb_tc_rf_mod, pred.var = "turb.90d.mn", pred.grid = pred.grid) 
-p1 <- ggplot(pd, aes(x = turb.90d.mn, y = yhat)) +
-  geom_line(linewidth = 2) +
-  labs(x = "90 Day Mean Turbidity", y = "Total Cover") +
-  theme_bw(base_size = 14)
-p1
-```
+
+::: {.cell}
+::: {.cell-output-display}
+![Random forest partial dependence for total cover as a function of 90 day mean turbidity.](MBreport_files/figure-pdf/fig-rf_turb-1.pdf){#fig-rf_turb width=50%}
+:::
+:::
 
 
-```{r}
-mb_tc_lm_loocv <- readRDS(here("models", "mb_tc_lm_loocv.rds"))
-mb_tc_splm_loocv <- readRDS(here("models", "mb_tc_splm_loocv.rds"))
-mb_tc_spglm_beta_loocv <- readRDS(here("models", "mb_tc_spglm_beta_loocv.rds")) * 100 # to undo scaling
-mb_tc_spglm_gamma_loocv <- readRDS(here("models", "mb_tc_spglm_gamma_loocv.rds"))
-mb_tc_lm_loocv <- readRDS(here("models", "mb_tc_lm_loocv.rds"))
-mb_tc_rf_oob <- readRDS(here("models", "mb_tc_rf_oob.rds"))
-mb_cv <- bind_rows(mb_tc_lm_loocv, mb_tc_splm_loocv, mb_tc_spglm_beta_loocv,
-                   mb_tc_spglm_gamma_loocv, mb_tc_rf_oob)
-```
+
+
+::: {.cell}
+
+:::
+
 
 Importantly, all five approaches found important relationships among the explanatory variables and total cover, in the directions expected. From @tbl-mb_cv, the spatial linear model and random forest had the lowest out-of-sample root-mean-squared-prediction error, followed by the generalized linear models and then by the nonspatial linear model. Random forest partial dependence plots [@greenwell2017pdp], which characterize the marginal behavior of a variable in a random forest model, suggested linear effects of the model variables to be reasonable. Given this context, we chose the spatial linear model as the final model.
-```{r}
-#| label: tbl-mb_cv
-#| tbl-cap: "Moreton Bay out of sample prediction metrics for the various approaches. Mean bias (MBias) tended to be small relative to root-mean-squared-prediction error (RMSPE)."
-mb_cv %>%
-  mutate(approach = c("LM", "SPLM", "SPGLM-Beta", "SPGLM-Gamma", "RF")) %>%
-  select(approach, bias, RMSPE) %>%
-  arrange(RMSPE) %>%
-  kable(digits = 2, col.names = c("Approach", "MBias", "RMSPE"))
-```
+
+::: {#tbl-mb_cv .cell tbl-cap='Moreton Bay out of sample prediction metrics for the various approaches. Mean bias (MBias) tended to be small relative to root-mean-squared-prediction error (RMSPE).'}
+::: {.cell-output-display}
+
+
+|Approach    | MBias| RMSPE|
+|:-----------|-----:|-----:|
+|SPLM        | -0.02| 18.41|
+|RF          | -0.11| 18.84|
+|SPGLM-Beta  | -2.76| 19.60|
+|SPGLM-Gamma |  5.42| 20.07|
+|LM          |  0.00| 22.54|
+
+
+:::
+:::
+
 
 # Resilience Modeling {#sec-mb_resilience}
 
-```{r}
-#| fig-width: 8
-#| fig-height: 8
-#| label: fig-resid_fy_mb
-#| fig-cap: "Residuals for resilience analysis in Moreton Bay by financial year."
-dat$residuals <- residuals(mb_tc_splm_mod)
-dat2 <- dat %>%
-  arrange(residuals, fy)
-ggplot(dat2) +
-  geom_sf(data = bay, fill = "white") +
-  geom_sf(data = dat2, aes(color = residuals), size = 0.8) +
-  scale_color_viridis_c(name = "Residuals", option = "H") +
-  scale_x_continuous(breaks = c(153.1, 153.3, 153.5)) +
-  facet_wrap(~ fy) +
-  theme_bw(base_size = 14) +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
-```
+
+::: {.cell}
+::: {.cell-output-display}
+![Residuals for resilience analysis in Moreton Bay by financial year.](MBreport_files/figure-pdf/fig-resid_fy_mb-1.pdf){#fig-resid_fy_mb}
+:::
+:::
+
 
 The model described in @sec-wq_mod quantifies, on a bay-wide scale, the effects of various water quality and geographic drivers on total seagrass cover. It does not, however, quantify resilience on a site-specific scale. @gilby2023drivers provide a framework to quantify resilience on a site-specific scale. They suggest identifying hotspots (i.e., brightspots), sites that are performing better than expected (according to some model fit), as well as coldspots, sites that are performing worse than expected (according to some model fit). They identify hotspots and coldspots based on deviations exceeding expected bounds (based on confidence intervals) based on the model fit. They argue these hotspots and coldspots provide significant utility, both in better understanding the drivers of site-specific resilience as well as informing subsequent management action. 
 
-```{r}
-#| label: tbl-res_vars_mb
-#| tbl-cap: "Moreton Bay resilience variables considered for modeling."
-res_vars <- tibble(
-  Variable = c("Coral Habitat Total Area", "Seagrass Habitat Total Area",
-              "Mangrove Habitat Total Area", "Gastropod Habitat Total Area",
-              "Distance to Coral Habitat", "Distance to Seagrass Habitat",
-              "Distance to Mangrove Habitat", "Distance to Gastropod Habitat",
-              "Species Richness", "Habitat Count", "Dominant Species",
-              "Bathymetry Mean Depth", "Bathymetry Mean Curvature", "Bathymetry Mean Slope",
-              "EHMP Subzone"), 
-  Effect = c(rep("Fixed", 14), "Random"),
-  Included = c(rep("Yes", 15)),
-  `Nonlinearity Degree` = c(rep(2, 4), 3, 2, 2, 2, 1, 2, NA, 2, 2, 2, NA)
-)
-res_vars %>%
-  kable()
-```
+
+::: {#tbl-res_vars_mb .cell tbl-cap='Moreton Bay resilience variables considered for modeling.'}
+::: {.cell-output-display}
+
+
+|Variable                      |Effect |Included | Nonlinearity Degree|
+|:-----------------------------|:------|:--------|-------------------:|
+|Coral Habitat Total Area      |Fixed  |Yes      |                   2|
+|Seagrass Habitat Total Area   |Fixed  |Yes      |                   2|
+|Mangrove Habitat Total Area   |Fixed  |Yes      |                   2|
+|Gastropod Habitat Total Area  |Fixed  |Yes      |                   2|
+|Distance to Coral Habitat     |Fixed  |Yes      |                   3|
+|Distance to Seagrass Habitat  |Fixed  |Yes      |                   2|
+|Distance to Mangrove Habitat  |Fixed  |Yes      |                   2|
+|Distance to Gastropod Habitat |Fixed  |Yes      |                   2|
+|Species Richness              |Fixed  |Yes      |                   1|
+|Habitat Count                 |Fixed  |Yes      |                   2|
+|Dominant Species              |Fixed  |Yes      |                  NA|
+|Bathymetry Mean Depth         |Fixed  |Yes      |                   2|
+|Bathymetry Mean Curvature     |Fixed  |Yes      |                   2|
+|Bathymetry Mean Slope         |Fixed  |Yes      |                   2|
+|EHMP Subzone                  |Random |Yes      |                  NA|
+
+
+:::
+:::
+
 
 Building from @gilby2023drivers, we use the residuals from the model in @sec-wq_mod as the basis for studying site-specific resilience, linking the values of these residuals to site-specific variables like species habitat, species richness, and bathymetry via a separate spatial linear model, with a random effect for EHMP subzone. These models capture varying nonlinear behavior in the residuals as a function of the resilience variables using B-spline basis functions [@deboor1978practical; @eilers1996flexible] whose degree is informed by random forest partial dependence plots (built from a random forest model on the residuals). While @gilby2023drivers focused more on specific hotspots, linking environmental variables to those sites, we used our framework to provide a different set of information -- the characterizing of the most important drivers of resilience, on average. Because we were interested in hypotheses testing, not parsimony, we included all potential variables as fixed effects in the model. These included area of and distance to coral, seagrass, mangrove, and gastropod habitat, species richness and dominant species, habitat count, and bathymetry metrics (@tbl-res_vars_mb), which have the following structure:
 
@@ -522,24 +471,32 @@ Building from @gilby2023drivers, we use the residuals from the model in @sec-wq_
 
 ## Model Fit
 
-```{r}
-#| label: tbl-mb-res-covariates
-#| tbl-cap: "ANOVA table of covariates in the Moreton Bay resilience model."
-mb_tc_splm_mod_res <- readRDS(here("models", "mb_tc_splm_mod_res.rds"))
-mb_tc_splm_mod_res %>%
-  anova() %>%
-  tidy() %>%
-  filter(effects != "(Intercept)") %>%
-  arrange(p.value) %>%
-  mutate(effects = c("Dominant Species", "Species Richness", "Bathymetry Mean Depth",
-         "Bathymetry Mean Curvature", "Gastropod Habitat Total Area", 
-         "Bathymetry Mean Slope", "Coral Habitat Total Area",
-         "Seagrass Habitat Total Area", "Distance to Mangrove Habitat", 
-         "Distance to Seagrass Habitat", "Habitat Count", 
-         "Distance to Gastropod Habitat", "Distance to Mangrove Habitat", 
-         "Distance to Coral Habitat")) %>%
-  kable(digits = 3, col.names = c("Effects", "df", "Chi-sq", "p.value"))
-```
+
+::: {#tbl-mb-res-covariates .cell tbl-cap='ANOVA table of covariates in the Moreton Bay resilience model.'}
+::: {.cell-output-display}
+
+
+|Effects                       | df|   Chi-sq| p.value|
+|:-----------------------------|--:|--------:|-------:|
+|Dominant Species              |  6| 1637.726|   0.000|
+|Species Richness              |  1|   22.188|   0.000|
+|Bathymetry Mean Depth         |  2|   21.876|   0.000|
+|Bathymetry Mean Curvature     |  2|    8.999|   0.011|
+|Gastropod Habitat Total Area  |  2|    5.155|   0.076|
+|Bathymetry Mean Slope         |  2|    4.768|   0.092|
+|Coral Habitat Total Area      |  2|    2.845|   0.241|
+|Seagrass Habitat Total Area   |  2|    1.971|   0.373|
+|Distance to Mangrove Habitat  |  2|    1.871|   0.392|
+|Distance to Seagrass Habitat  |  2|    1.836|   0.399|
+|Habitat Count                 |  2|    0.722|   0.697|
+|Distance to Gastropod Habitat |  2|    0.613|   0.736|
+|Distance to Mangrove Habitat  |  2|    0.536|   0.765|
+|Distance to Coral Habitat     |  3|    0.718|   0.869|
+
+
+:::
+:::
+
 
 From @tbl-mb-res-covariates, we find strong evidence ($p$-value < 0.001) that dominant species, species richness, and bathymetry mean depth are associated with resilience: 
 
@@ -556,56 +513,19 @@ We found moderate evidence ($p$-value < 0.1) that bathymetry mean curvature, gas
 We found little evidence ($p$-value > 0.1) the remaining variables were associated with resilience (after controlling for other modeled variables).
 
 
-```{r}
-pred_grid <- tibble(
-  dom.spp = "ZMHU",
-  sg.rich = mean(dat$sg.rich),
-  coral.msq = mean(dat$coral.msq),
-  seagr.msq = mean(dat$seagr.msq),
-  u.mang.msq = mean(dat$u.mang.msq),
-  shell.msq = mean(dat$shell.msq),
-  hab.count = mean(dat$hab.count),
-  coral.dist.m = mean(dat$coral.dist.m),
-  seag.dist.m = mean(dat$seag.dist.m),
-  u.mg.dist = mean(dat$u.mg.dist),
-  shell.dist.m = mean(dat$shell.dist.m),
-  bath.m.mean = mean(dat$bath.m.mean),
-  rslope.dg.mean = mean(dat$rslope.dg.mean),
-  rcurv.dg.mean = mean(dat$rcurv.dg.mean),
-  ehmp.subzone = "Southern Bay",
-  xc = 75000, yc = 150000
-) %>% 
-  st_as_sf(crs = 3113, coords = c("xc", "yc"))
 
-n_grid <- 200
+::: {.cell}
 
-pred_grid_sg.rich <- pred_grid[rep(1, n_grid), ]
-pred_grid_sg.rich$sg.rich <- seq(0, 4, length.out = n_grid)
-pred_grid_sg.rich[, c("fit", "lwr", "upr")] <- predict(mb_tc_splm_mod_res, newdata = pred_grid_sg.rich, local = TRUE, interval = "confidence")
-
-pred_grid_bath.m.mean <- pred_grid[rep(1, n_grid), ]
-pred_grid_bath.m.mean$bath.m.mean <- seq(quantile(dat$bath.m.mean, 0.01), quantile(dat$bath.m.mean, 0.99), length.out = n_grid)
-pred_grid_bath.m.mean[, c("fit", "lwr", "upr")] <- predict(mb_tc_splm_mod_res, newdata = pred_grid_bath.m.mean, local = TRUE, interval = "confidence")
-```
-
-```{r}
-#| label: fig-mb_res_rich_bath
-#| fig-cap: "Average species richness (left) and bathymetry mean depth (right) effects on resilience. Predictions (and confidence intervals) were evaluated at the means of all other numeric variables and for the ZMHU species in the Southern Bay (similar trends occur for both variables among the remaining species and subzones)."
-p1 <- ggplot(pred_grid_sg.rich, aes(x = sg.rich)) +
-  geom_line(aes(y = fit)) +
-  geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = 0.4, fill = "grey") +
-  labs(x = "Species Richness", y = "Average Resilience") +
-  theme_bw(base_size = 14)
+:::
 
 
-p2 <- ggplot(pred_grid_bath.m.mean, aes(x = bath.m.mean)) +
-  geom_line(aes(y = fit)) +
-  geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = 0.4, fill = "grey") +
-  labs(x = "Bathymetry Mean Depth", y = "Average Resilience") +
-  theme_bw(base_size = 14)
 
-p1 + p2
-```
+::: {.cell}
+::: {.cell-output-display}
+![Average species richness (left) and bathymetry mean depth (right) effects on resilience. Predictions (and confidence intervals) were evaluated at the means of all other numeric variables and for the ZMHU species in the Southern Bay (similar trends occur for both variables among the remaining species and subzones).](MBreport_files/figure-pdf/fig-mb_res_rich_bath-1.pdf){#fig-mb_res_rich_bath}
+:::
+:::
+
 
 ## Alternative Approaches
 
@@ -620,19 +540,13 @@ Another way we studied resilience was using a random forest (fit to the same res
 
 Other alternatives to explore involve using the residuals from water quality and geographic models fit using the spatial generalized linear models and random forests. These residuals could be analyzed using spatial linear models (recall that the residuals are unconstrained) and random forests. We expect these alternative approaches to yield generally similar results, however.
 
-```{r}
-#| label: fig-rf_bathy
-#| fig-cap: "Random forest partial dependence for resilience as a function of bathymetry mean depth."
-#| out-width: "50%"
-mb_tc_rf_mod_res <- readRDS(file = here("models", "mb_tc_rf_mod_res.rds"))
-pred.grid <- tibble(bath.m.mean = seq(quantile(dat$bath.m.mean, 0.01), quantile(dat$bath.m.mean, 0.99), length.out = 16))
-pd <- partial(mb_tc_rf_mod_res, pred.var = "bath.m.mean", pred.grid = pred.grid) 
-p1 <- ggplot(pd, aes(x = bath.m.mean, y = yhat)) +
-  geom_line(linewidth = 2) +
-  labs(x = "Bathymetry Mean Depth", y = "Average Resilience") +
-  theme_bw(base_size = 14)
-p1
-```
+
+::: {.cell}
+::: {.cell-output-display}
+![Random forest partial dependence for resilience as a function of bathymetry mean depth.](MBreport_files/figure-pdf/fig-rf_bathy-1.pdf){#fig-rf_bathy width=50%}
+:::
+:::
+
 
 
 # Limitations and Future Suggestions
@@ -674,62 +588,27 @@ Overall, the results of this report provide a quantitative, spatially structured
 # Appendix {.unnumbered}
 
 This is an appendix
-```{r}
-#| label: fig-time_since_flood
-#| fig-cap: "Time since the flood against the squared reciprocal of time since the flood."
-#| eval: false
-dat_yr.flood <- dat %>%
-  filter(yr.flood > 0) %>%
-  mutate(yr.flood = seq(min(.$yr.flood), max(.$yr.flood), length.out = NROW(.))) %>%
-  mutate(yr.flood.recip2 = 1/yr.flood^2)
-ggplot(dat_yr.flood, aes(x = yr.flood, y = yr.flood.recip2)) +
-  geom_line() +
-  labs(x = "Years Since Flood", y = expression("1/(Years Since Flood)"^2)) +
-  theme_bw(base_size = 12)
-```
 
-```{r}
-#| label: fig-cover_tidal_mb
-#| fig-cap: "Total seagrass cover in Moreton Bay by tidal class and financial year. Boxplot width is proportional to the number of observations in each x-axis level (within financial year)."
-#| eval: false
-dat_tidal <- dat %>%
-  mutate(depth.range = case_when(
-    depth.range == "deep subtidal" ~ "DSt",
-    depth.range == "shallow subtidal" ~ "SSt",
-    depth.range == "intertidal" ~ "Int",    
-  )) %>%
-  mutate(depth.range = factor(depth.range, levels = c("Int", "SSt", "DSt")))
-ggplot(dat_tidal, aes(x = depth.range, y = total.cover)) +
-  geom_boxplot(varwidth = TRUE, size = 0.5) +
-  facet_wrap(~ fy) + 
-  labs(x = "Tidal Class", y = "Total Cover") +
-  coord_cartesian(ylim = c(0, 50)) +
-  theme_bw(base_size = 14) +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
-```
+::: {.cell}
 
-```{r}
-#| label: fig-cover_turb_mb
-#| fig-cap: "Total seagrass cover in Moreton Bay by turbidity class (whether exceeding 0.5 NTU) and financial year. Generally, increased turbidity is associated with lower median total cover. Boxplot width is proportional to the number of observations in each x-axis level (within financial year). The y-axis is truncated at 50, though a few observations have higher total seagrass cover."
-#| eval: false
-dat_turb <- dat %>%
-  mutate(exceed_0.5 = factor(if_else(turb.90d.mn > 0.5, "Yes", "No"), levels = c("Yes", "No")))
-ggplot(dat_turb, aes(x = exceed_0.5, y = total.cover)) +
-  geom_boxplot(varwidth = TRUE) +
-  facet_wrap(~ fy) + 
-  labs(x = "Exceeds 0.5 NTU", y = "Total Cover") +
-  coord_cartesian(ylim = c(0, 50)) +
-  theme_bw(base_size = 14)
-```
+:::
 
 
-```{r}
-#| eval: false
-mb_tc_rf_mod_res <- readRDS(here("models", "mb_tc_rf_mod_res.rds"))
-pred_grid_rf <- pred_grid %>%
-  st_drop_geometry() %>%
-  select(bath.m.mean) %>%
-  mutate(dom.spp = "ZMHU", ehmp.subzone = "Southern Bay") %>%
-  slice(seq(1, n(), by = 10))
-pred_grid_rf <- partial(mb_tc_rf_mod_res, pred.var = "bath.m.mean", pred.grid = pred_grid_rf)
-```
+
+::: {.cell}
+
+:::
+
+
+
+::: {.cell}
+
+:::
+
+
+
+
+::: {.cell}
+
+:::
+
