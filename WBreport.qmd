@@ -34,8 +34,11 @@ library(pdp)
 library(emmeans)
 library(janitor)
 library(kableExtra)
+library(splines)
+library(patchwork)
 ```
 
+# Executive Summary
 
 # Background
 
@@ -70,6 +73,7 @@ where $\mathbf{Z}$ is a random effect design matrix (dimension $n \times k$) tha
 ```{r}
 #| label: fig-spcov_fns
 #| fig-cap: "Three spatial covariance functions that represent different spatial dependence behavior."
+#| out-width: "75%"
 range <- 50
 spcor_dat <- tibble(
   h = seq(0, range*2),
@@ -84,7 +88,7 @@ ggplot(spcor_dat, aes(x = Distance, y = `Spatial Covariance`, color = Function, 
   theme_bw(base_size = 14)
 ```
 
-Like the traditional linear model, the spatial linear model can capture complex nonlinearities in the data through the use of interaction effects [@faraway2002practical; @lenth2025emmeans], splines [@chambers1992statistical], additive models [@wood2017generalized; @pedersen2019hierarchical], and penalized regression models like the ridge and lasso [@tibshirani1996regression]. Generally, this is accomplished by leveraging _basis functions_ that break down nonlinear behavior into a set of additive linear components that may include penalty terms which guard against overfitting. Furthermore, there is no assumption that $y_i$ itself is normally distributed; rather, distributional assumptions are placed on the random errors after incorporating the slope parameters. This clarification implies the spatial (and nonspatial) linear models can be quite effective at modeling a range of data that are not normally distributed. For highly nonnormal data, tools like generalized linear models, which we discuss later, can be helpful. Finally, under general conditions, the slope parameters of the spatial (and nonspatial) linear models are approximately normally distributed with a large sample size (see @casella2024statistical for a general justification via the Central Limit Theorem and @zhang2005towards for nuances regarding spatial data). This is beneficial because it justifies valid hypothesis testing on the slope coefficients (often of primary ecological interest), no matter the distribution of the data (given certain assumptions are satisfied).
+Like the traditional linear model, the spatial linear model can capture complex nonlinearities in the data through the use of interaction effects [@faraway2002practical; @lenth2025emmeans], splines [@chambers1992statistical; @ruppert2003semiparametric], additive models [@wood2017generalized; @pedersen2019hierarchical], and penalized regression models like the ridge and lasso [@tibshirani1996regression]. Generally, this is accomplished by leveraging _basis functions_ that break down nonlinear behavior into a set of additive linear components that may include penalty terms which guard against overfitting. Furthermore, there is no assumption that $y_i$ itself is normally distributed; rather, distributional assumptions are placed on the random errors after incorporating the slope parameters. This clarification implies the spatial (and nonspatial) linear models can be quite effective at modeling a range of data that are not normally distributed. For highly nonnormal data, tools like generalized linear models, which we discuss later, can be helpful. Finally, under general conditions, the slope parameters of the spatial (and nonspatial) linear models are approximately normally distributed with a large sample size (see @casella2024statistical for a general justification via the Central Limit Theorem and @zhang2005towards for nuances regarding spatial data). This is beneficial because it justifies valid hypothesis testing on the slope coefficients (often of primary ecological interest), no matter the distribution of the data (given certain assumptions are satisfied).
 
 One of the most useful applications of the spatial linear model is predicting the response variable at unobserved locations. A very useful spatial prediction method called Kriging has a rich theoretical justification [@cressie1990origins; @stein1999interpolation]. Kriging is the spatial analogue to best linear unbiased prediction (BLUP) for mixed models [@henderson1975best]. Via Kriging, the spatial linear model produces BLUPs at each unobserved location of interest, alongside prediction intervals to characterize uncertainty. While useful, sometimes the goal is to create a BLUP for an entire region of interest. This technique, which builds upon the theoretical foundations of Kriging, is called block Kriging [@ver2002sampling; @cressie2006block]. The intuition is to make point predictions at a very dense grid in the study region and then average these predictions, appropriately characterizing uncertainty. Together, Kriging and block Kriging provide a complete set of tools for spatial prediction, given the fit of a spatial linear model.
 
@@ -146,19 +150,21 @@ dat %>%
   )
 ```
 
-# Water Quality and Geographic Modeling
+# Water Quality and Geographic Modeling {#sec-wq_mod}
 
 Total cover is a percentage that ranges from 0% (no seagrass) to 68.3%. @fig-cover_fy_wb shows total cover by financial year throughout the Bay. Total cover tends to be largest along the eastern shoreline of the Bay and lowest in the middle of the Bay. @fig-cover_fy_wb also reveals that 2022-2023 lacked sampling in much of the Great Sandy Strait.
 
 
 ```{r}
+#| fig-width: 10
+#| fig-height: 6
 #| label: fig-cover_fy_wb
 #| fig-cap: "Total seagrass cover in Wide Bay by financial year."
-dat <- dat %>%
+dat1  <- dat %>%
   arrange(total.cover, fy)
-ggplot(dat) +
+ggplot(dat1) +
   geom_sf(data = bay, fill = "white") +
-  geom_sf(data = dat, aes(color = total.cover), size = 0.8) +
+  geom_sf(data = dat1, aes(color = total.cover), size = 0.8) +
   scale_color_viridis_c(name = "Cover") +
   scale_x_continuous(breaks = c(152.1, 152.7, 153.3)) +
   facet_wrap(~ fy) +
@@ -209,7 +215,7 @@ wq_vars %>%
 * The "Algae Presence" variable has two levels: Algae present and algae not present
 * The "Algae Cover" variable is numeric from zero to one.
 * The "Growing Season" variable has two levels: Growing (September - December) and Not Growing (January - August). 
-* The "Zone Class" variable has six levels: Central, East, Greate Sandy Strait, Hervey Bay, Southern, and Southwest (@fig-zone_class). 
+* The "Zone Class" variable has six levels: Central, East, Great Sandy Strait, Hervey Bay, Southern, and Southwest (@fig-zone_class). 
 
 ```{r}
 #| label: tbl-geo_vars_wb
@@ -234,7 +240,7 @@ ggplot(dat) +
   geom_sf(data = bay, fill = "white") +
   geom_sf(data = dat, aes(color = zone.class), size = 0.5) +
   scale_color_discrete(name = "Zone Class") +
-  scale_x_continuous(breaks = c(153.1, 153.3, 153.5)) +
+  scale_x_continuous(breaks = c(152.1, 152.7, 153.3)) +
   theme_bw(base_size = 14) +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
 ```
@@ -268,8 +274,40 @@ To describe total seagrass cover in Wide Bay, our final model was a spatial line
 * Sediment Type: The estimated (marginal) average total cover is largest in mud (4.3%), followed by sand (3.6%), muddy sand (3.2%), rock (3.0%), and sandy mud (2.8%). 
 * 90 Day Temperature: A one-degree (C) increase in 90 day temperature is associated with a decrease in average total cover by 0.5% points.
 
-Together, these results can inform triggers for management responses in various conditions. For example, given the decrease in total cover with temperature, one could propose a specific temperature threshold above which management intervention is warranted. Note that the estimated marginal means for tidal range and sediment type were calculated using the `emmeans` **R** package [@lenth2025emmeans]. The estimated marginal means for sediment type were calculated using the `emmeans` **R** package [@lenth2025emmeans].
+```{r}
+pred_grid <- tibble(
+  depth.range = "Intertidal",
+  sed.type = "Sand",
+  temp.90d.mn = mean(dat$temp.90d.mn),
+  turb.90d.mn = mean(dat$turb.90d.mn),
+  turb.fld.mn = mean(dat$turb.fld.mn),
+  yr.flood1.recip2 = mean(dat$yr.flood1.recip2),
+  xc = 150000, yc = 275000
+) %>% 
+  st_as_sf(crs = 3113, coords = c("xc", "yc"))
 
+n_grid <- 200
+
+pred_grid_temp.90d.mn <- pred_grid[rep(1, n_grid), ]
+pred_grid_temp.90d.mn$temp.90d.mn <- seq(20, 27, length.out = n_grid)
+pred_grid_temp.90d.mn[, c("fit", "lwr", "upr")] <- predict(wb_tc_splm_mod, newdata = pred_grid_temp.90d.mn, local = TRUE, interval = "confidence")
+```
+
+```{r}
+#| label: fig-mb_temp_90d
+#| fig-cap: "Average total cover as a function of 90 day mean temperature. Estimates (and confidence intervals) were evaluated at the means of all other numeric variables, and for the intertidal range and Sand sediment type (the same trends occur for both variables among the remaining species and subzones)."
+#| out-width: "50%"
+p1 <- ggplot(pred_grid_temp.90d.mn, aes(x = temp.90d.mn)) +
+  geom_line(aes(y = fit)) +
+  geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = 0.4, fill = "grey") +
+  labs(x = "Temperature (90 Day)", y = "Average Total Cover") +
+  theme_bw(base_size = 14)
+
+p1
+```
+
+
+Together, these results can inform triggers for management responses in various conditions. For example, given the decrease in total cover with temperature, one could propose a specific temperature threshold above which management intervention is warranted. Note that the estimated marginal means for tidal range and sediment type were calculated using the `emmeans` **R** package [@lenth2025emmeans]. 
 ```{r}
 #| label: tbl-wb-covariates
 #| tbl-cap: "ANOVA table of covariates in the Wide Bay water quality and geographic model."
@@ -362,17 +400,17 @@ ggplot(bk_wb_all, aes(x = fy, y = fit)) +
 
 ## Alternative Approaches
 
-In addition to the spatial linear model, we considered several different modeling approaches (all using the same explanatory variables): a nonspatial linear model, a spatial beta regression model, a spatial gamma regression model, a random forest model, and a spatial binomial model. The nonspatial linear model provided a useful baseline to compare the spatial linear model against, elucidating the impact of spatial dependence on model fit. The spatial beta regression model is a generalized linear model used to characterize proportion data between zero and one. To adhere to this restriction, total cover was 1) scaled to a proportion and 2) if exactly zero (one), set to 0.01 (0.99).  The spatial gamma regression model is a generalized linear model used to characterize skewed positive data. To adhere to this restriction, if total cover was exactly zero, it was set to 0.01. The random forest provided a useful comparison to a machine learning approach, quite different than the aforementioned statistical approaches. We characterized the directionality of random forest effects using partial dependence plots (@fig-rf_turb). Finally, the binomial model is a generalized linear model used to characterize presence/absence (success/failure) data. To adhere to this restriction, total cover was 1) given a value of zero if there was no seagrass or 2) given a value of one if there was any seagrass.
+In addition to the spatial linear model, we considered several different modeling approaches (all using the same explanatory variables): a nonspatial linear model, a spatial beta regression model, a spatial gamma regression model, a random forest model, and a spatial binomial model. The nonspatial linear model provided a useful baseline to compare the spatial linear model against, elucidating the impact of spatial dependence on model fit. The spatial beta regression model is a generalized linear model used to characterize proportion data between zero and one. To adhere to this restriction, total cover was 1) scaled to a proportion and 2) if exactly zero (one), set to 0.01 (0.99).  The spatial gamma regression model is a generalized linear model used to characterize skewed positive data. To adhere to this restriction, if total cover was exactly zero, it was set to 0.01. The random forest provided a useful comparison to a machine learning approach, quite different than the aforementioned statistical approaches. We characterized the directionality of random forest effects using partial dependence plots (@fig-rf_temp). Finally, the binomial model is a generalized linear model used to characterize presence/absence (success/failure) data. To adhere to this restriction, total cover was 1) given a value of zero if there was no seagrass or 2) given a value of one if there was any seagrass.
 
 ```{r}
-#| label: fig-rf_turb
-#| fig-cap: "Random forest partial dependence for total cover as a function of 90 day mean turbidity."
+#| label: fig-rf_temp
+#| fig-cap: "Random forest partial dependence for total cover as a function of 90 day mean temperature"
 wb_tc_rf_mod <- readRDS(file = here("models", "wb_tc_rf_mod.rds"))
-pred.grid <- tibble(turb.90d.mn = seq(0, 1, length.out = 16))
-pd <- partial(wb_tc_rf_mod, pred.var = "turb.90d.mn", pred.grid = pred.grid) 
-ggplot(pd, aes(x = turb.90d.mn, y = yhat)) +
+pred.grid <- tibble(temp.90d.mn = seq(20, 27, length.out = 16))
+pd <- partial(wb_tc_rf_mod, pred.var = "temp.90d.mn", pred.grid = pred.grid) 
+ggplot(pd, aes(x = temp.90d.mn, y = yhat)) +
   geom_line(linewidth = 2) +
-  labs(x = "90 Day Mean Turbidity", y = "Total Cover") +
+  labs(x = "90 Day Mean Temperature", y = "Total Cover") +
   theme_bw(base_size = 14)
 ```
 
@@ -398,17 +436,186 @@ wb_cv %>%
   kable(digits = 2, col.names = c("Approach", "MBias", "RMSPE"))
 ```
 
-## Limitations and Future Suggestions
-
-While the spatial linear model was useful for characterizing broad patterns related to tidal range, sediment type, temperature, and turbidity while accounting for spatial dependence, there are some limitations. First, the eReefs water quality data are modeled, not directly observed in the field, potentially propagating modeling error. Second, there are many correlated water quality variables, making it hard (for any model) to isolate the effects of each component of water quality pre- and post-flood. Third, there is a lack of baseline mean salinity in the 90 days prior to sampling, which makes it challenging to directly study the effect of mean salinity during the flood period. Fourth, there is a lack of data immediately after each flood -- nearly all of the data are after both floods, making it challenging to isolate the contribution from each flood separately. Fifth, there was no pre-flood data, making it challenging to compare against a pre-flood baseline. Sixth, there is a lack of addition data sources that could help quantify the impact of various explanatory variables on total pre and post-flood, potentially varying across both space and time (e.g., light attenuation, biological interactions, etc.). Seventh, the locations at which data were collected were not randomly sampled. Randomly sampling sites helps to guard against sampling preferentially [@diggle2010preferential] and provides more robust and representative data sources [@dumelle2022comparison].
-
 # Resilience Modeling {#sec-wb_resilience}
+
+```{r}
+#| fig-width: 8
+#| fig-height: 8
+#| label: fig-resid_fy_wb
+#| fig-cap: "Residuals for reslience analysis in Wide Bay by financial year."
+dat$residuals <- residuals(wb_tc_splm_mod)
+dat2 <- dat %>%
+  arrange(residuals, fy)
+ggplot(dat2) +
+  geom_sf(data = bay, fill = "white") +
+  geom_sf(data = dat2, aes(color = residuals), size = 0.8) +
+  scale_color_viridis_c(name = "Residuals", option = "H") +
+  scale_x_continuous(breaks = c(152.1, 152.7, 153.3)) +
+  facet_wrap(~ fy) +
+  theme_bw(base_size = 14) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+```
+
+The model described in @sec-wq_mod quantifies, on a bay-wide scale, the effects of various water quality and geographic drivers on total seagrass cover. It does not, however, quantity resilience on a site-specific scale.  @gilby2023drivers provide a framework to quantify resilience on a site-specific scale. They suggest identifying hotspots (i.e., brightspots), sites that are performing better than expected (according to some model fit), as well as coldspots, sites that are performing worse than expected (according to some model fit). They identify hotspots and coldspots based on deviations exceeding expected bounds (based on confidence intervals) based on the model fit. They argue these hotspots and coldspots provide significant utility, both in better understanding the drivers of site-specific resilience as well as informing subsequent management action. 
+
+```{r}
+#| label: tbl-res_vars_mb
+#| tbl-cap: "Wide Bay resilience variables considered for modeling."
+res_vars <- tibble(
+  Variable = c("Coral Habitat Total Area", "Seagrass Habitat Total Area",
+              "Mangrove Habitat Total Area", "Gastropod Habitat Total Area",
+              "Distance to Coral Habitat", "Distance to Seagrass Habitat",
+              "Distance to Mangrove Habitat", "Distance to Gastropod Habitat",
+              "Species Richness", "Habitat Count", "Dominant Species",
+              "Bathymetry Mean Depth", "Bathymetry Mean Curvature", "Bathymetry Mean Slope",
+              "EHMP Subzone"), 
+  Effect = c(rep("Fixed", 14), "Random"),
+  Included = if_else(Variable %in% c("Seagrass Habitat Total Area", "Bathymetry Mean Curvature"), "No", "Yes"),
+  `Nonlinearity Degree` = c(2, 2, 2, NA, 3, 2, 2, 2, 1, 2, NA, 2, NA, 2, NA)
+)
+res_vars %>%
+  kable()
+```
+
+Building from @gilby2023drivers, we use the residuals from the model in @sec-wq_mod as the basis for studying site-specific resilience, linking the values of these residuals to site-specific variables like species habitat, species richness, and bathymetry via a separate spatial linear model, with a random effect for EHMP subzone. These models capture varying nonlinear behavior in the residuals as a function of the resilience variables using B-spline basis functions [@deboor1978practical; @eilers1996flexible] whose degree is informed by random forest partial dependence plots (built from a random forest model on the residuals). While @gilby2023drivers focused more on specific hotspots, linking environmental variables to those sites, we used our framework to provide a different set of information -- the characterizing of the most important drivers of resilience, on average. Because were were interested in hypotheses not parsimony, we included all potential variables as fixed effects in the model aside from "Gastropod Habitat Total Area" and "Bathymetry Mean Curvature" because there were some challenges processing these data which prohibited their use. These included area of and distance to coral, seagrass, mangrove, and gastropod habitat, species richness and dominant species, habitat count, and bathymetry metrics (@tbl-res_vars_mb), which have the following structure:
+
+
+* The "Coral Habitat Total Area" is numeric from 0 msq to 367,906 msq.
+* The "Seagrass Habitat Total Area" is numeric from 0 msq to 773,161 msq.
+* The "Mangrove Habitat Total Area" is numeric from 0 msq to 241,057 msq.
+* The "Distance to Coral Habitat" is numeric from 0 m to 30,563 m.
+* The "Distance to Seagrass Habitat" is numeric from 0 m to 7,049 m.
+* The "Distance to Mangrove Habitat" is numeric from 0 m to 38,867 m.
+* The "Distance to Gastropod Habitat" is numeric from 0 m to 121,609 m.
+* The "Species Richness" is numeric (integer) from 0 unique species to 3 unique species.
+* The "Habitat Count" is numeric (integer) from 0 unique habitats to 3 unique habitats.
+* The "Dominant Species" has five levels: "Absent", "HD", "HO", "HS", and "ZMHU".
+* The "Bathymetry Mean Depth" is numeric from -30.58 m to 0.25 m.
+* The "Bathymetry Mean Slope" is numeric from 0.004 degrees to 3.93 degrees.
+* The "Zone Class" variable has six levels: Central, East, Great Sandy Strait, Hervey Bay, Southern, Southwest (@fig-zone_class). 
 
 ## Model Fit
 
+```{r}
+#| label: tbl-wb-res-covariates
+#| tbl-cap: "ANOVA table of covariates in the Moreton Bay resilience model."
+wb_tc_splm_mod_res <- readRDS(here("models", "wb_tc_splm_mod_res.rds"))
+wb_tc_splm_mod_res %>%
+  anova() %>%
+  tidy() %>%
+  filter(effects != "(Intercept)") %>%
+  arrange(p.value) %>%
+  mutate(effects = c("Species Richness", "Dominant Species", "Distance to Coral Habitat", 
+                     "Distance to Gastropod Habitat", "Distance to Mangrove Habitat",
+                     "Seagrass Habitat Total Area", "Mangrove Habitat Total Area",
+                     "Bathymetry Mean Slope", "Distance to Seagrass Habitat",
+                     "Bathymetry Mean Depth", "Coral Habitat Total Area",
+                     "Habitat Count")) %>%
+  kable(digits = 3, col.names = c("Effects", "df", "Chi-sq", "p.value"))
+```
+
+From @tbl-wb-res-covariates, we find strong evidence ($p$-value < 0.001) that species richness, dominant species, and distance to coral habitat are associated with resilience: 
+
+* Species Richness: An increase of species richness by one species was associated with an average increase in resilience by approximately five points (@fig-wb_res_rich_coral).
+* Dominant Species: The estimated (marginal) average resilience score is largest for HS (-0.17), followed by HD (-2.9), HO (-3.2), and ZMHU (-3.9). The overall ranking is most important, as the negative average scores are in part likely due to the heavy skew in the data.
+* Distance from Coral Habitat: From zero to around 10,000 m from coral habitat, there is a decreasing trend with resilience (i.e., increasing distance decreases resilience). Upwards of 10,000 m, there is an increasing trend with resilience (i.e., increasing distance increases resilience).
+
+We found little evidence ($p$-value > 0.1) the remaining variables were associated with resilience (after controlling for other modeled variables).
+
+
+```{r}
+pred_grid <- tibble(
+  dom.spp = "ZMHU",
+  sg.rich = mean(dat$sg.rich),
+  coral.msq = mean(dat$coral.msq),
+  seagr.msq = mean(dat$seagr.msq),
+  mang.msq = mean(dat$mang.msq),
+  shell.msq = mean(dat$shell.msq),
+  hab.count = mean(dat$hab.count),
+  coral.dist.m = mean(dat$coral.dist.m),
+  seag.dist.m = mean(dat$seag.dist.m),
+  mang.dist.m = mean(dat$mang.dist.m),
+  shell.dist.m = mean(dat$shell.dist.m),
+  bath.m.mean = mean(dat$bath.m.mean),
+  rslope.dg.mean = mean(dat$rslope.dg.mean),
+  ehmp.subzone = "Central",
+  xc = 150000, yc = 275000
+) %>% 
+  st_as_sf(crs = 3113, coords = c("xc", "yc"))
+
+n_grid <- 200
+
+pred_grid_sg.rich <- pred_grid[rep(1, n_grid), ]
+pred_grid_sg.rich$sg.rich <- seq(0, 4, length.out = n_grid)
+pred_grid_sg.rich[, c("fit", "lwr", "upr")] <- predict(wb_tc_splm_mod_res, newdata = pred_grid_sg.rich, local = TRUE, interval = "confidence")
+
+pred_grid_coral.dist.m <- pred_grid[rep(1, n_grid), ]
+pred_grid_coral.dist.m$coral.dist.m <- seq(quantile(dat$coral.dist.m, 0.01), quantile(dat$coral.dist.m, 0.99), length.out = n_grid)
+pred_grid_coral.dist.m[, c("fit", "lwr", "upr")] <- predict(wb_tc_splm_mod_res, newdata = pred_grid_coral.dist.m, local = TRUE, interval = "confidence")
+```
+
+```{r}
+#| label: fig-wb_res_rich_coral
+#| fig-cap: "Average species richness (left) and distance to coral habitat (right) effects on resilience. Predictions (and confidence intervals) were evaluated at the means of all other numeric variables and for the ZHMU species in the Southern Banks (similar trends occur for both variables among the remaining species and subzones)."
+p1 <- ggplot(pred_grid_sg.rich, aes(x = sg.rich)) +
+  geom_line(aes(y = fit)) +
+  geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = 0.4, fill = "grey") +
+  labs(x = "Species Richness", y = "Average Resilience") +
+  theme_bw(base_size = 14)
+
+
+p2 <- ggplot(pred_grid_coral.dist.m, aes(x = coral.dist.m)) +
+  geom_line(aes(y = fit)) +
+  geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = 0.4, fill = "grey") +
+  labs(x = "Distance to Coral Habitat", y = "Average Resilience") +
+  theme_bw(base_size = 14)
+
+p1 + p2
+```
+
 ## Alternative Approaches
 
+Another way we studied resilience was using a random forest (fit to the same residuals). Largely, we found similar results as the spatial linear model. Notably, for the random forest:
+
+
+* Species richness was most important, with a general increasing trend in resilience with richness.
+* Distance from mangrove habitat was second-most important, with a general increasing trend in resilience with distance from mangroves
+* Dominant species was third-most important, with HS being the most resilient followed by HO, ZMHU, and HD.
+* Bathymetry mean depth was fourth-most important, with a general increasing trend in resilience with depth.
+* Distance from coral habitat was fifth-most important, with a similar trend quadratic trend (@rf_coral) as in the spatial linear model.
+* The remaining variables (gastropod distance, seagrass area, bathymetry slope, seagrass distance, zone class, habitat count, mangrove area, and coral area) were least important.
+
+Other alternatives to explore involve using the residuals from water quality and geographic models fit using the spatial generalized linear models and random forests. These residuals could be analyzed using spatial linear models (recall that the residuals are unconstrained) and random forests. We expect these alternative approaches to yield generally similar results, but there could be nontrivial differences given the heavy skew of the data, however.
+
+```{r}
+#| label: fig-rf_coral
+#| fig-cap: "Random forest partial dependence for total cover as a function of distance from coral habitat."
+#| out-width: "50%"
+wb_tc_rf_mod_res <- readRDS(file = here("models", "wb_tc_rf_mod_res.rds"))
+pred.grid <- tibble(coral.dist.m = seq(quantile(dat$coral.dist.m, 0.01), quantile(dat$coral.dist.m, 0.99), length.out = 16))
+pd <- partial(wb_tc_rf_mod_res, pred.var = "coral.dist.m", pred.grid = pred.grid) 
+p1 <- ggplot(pd, aes(x = coral.dist.m, y = yhat)) +
+  geom_line(linewidth = 2) +
+  labs(x = "Distance from Coral Habitat", y = "Total Cover") +
+  theme_bw(base_size = 14)
+p1
+```
+
+
+# Limitations and Future Suggestions
+
+While the spatial linear model was useful for characterizing broad patterns related to tidal range, sediment type, temperature, and turbidity and site-specific patterns capturing resilience, all while accounting for spatial dependence, there are some limitations. First, the eReefs water quality data are modeled, not directly observed in the field, potentially propagating modeling error. Second, there are many correlated water quality variables, making it hard (for any model) to isolate the effects of each component of water quality pre- and post-flood. Third, there is a lack of baseline mean salinity in the 90 days prior to sampling, which makes it challenging to directly study the effect of mean salinity during the flood period. Fourth, there is a lack of data immediately after each flood -- nearly all of the data are after both floods, making it challenging to isolate the contribution from each flood separately. Fifth, there was no pre-flood data, making it challenging to compare against a pre-flood baseline. Sixth, there is a lack of addition data sources that could help quantify the impact of various explanatory variables on total pre and post-flood, potentially varying across both space and time (e.g., light attenuation, biological interactions, etc.). Seventh, the locations at which data were collected were not randomly sampled. Randomly sampling sites helps to guard against sampling preferentially [@diggle2010preferential] and provides more robust and representative data sources [@dumelle2022comparison]. Eight, the data have heavy skew and many observations without seagrass. While we explored several approaches and ultimately preferred the spatial linear model because of its interpretability and utility with block Kriging, the corresponding assumptions are less reliable than if the data had a more dense set of nonzero seagrass cover observations. No matter the approch ultimately used to analyze the data, highly skewed data with many zeros complicate modeling.
+
 # Revisiting the Research Questions
+
+**Research Question 1**: Can we identify water quality covariates that act as triggers for seagrass cover management responses? Are these triggers different based on whether they result from a specific event (e.g., flood) or are ambient?
+
+**Research Question 2**: Did seagrass cover improve after the flood event(s)? If so, how and where?
+
+**Research Question 3**: Can we identify site-specific resilience indicators, which describe where recovery is likely to be enhanced or impeded?  What factors contribute to seagrass resilience?
+
+# Discussion
+
 
 \clearpage
 

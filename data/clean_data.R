@@ -36,7 +36,7 @@ dat <- dat %>%
   na.omit()
 
 # add days since flood, years since flood, an after flood effect,
-# a decayign flood effect, and truncate the turbidity and salinity flood 
+# a decaying flood effect, and truncate the turbidity and salinity flood 
 # variables to be zero before the flood
 dat <- dat %>%
   mutate(ds.flood = if_else(ds.flood < 0, 0, ds.flood)) %>%
