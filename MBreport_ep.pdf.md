@@ -330,9 +330,29 @@ A tremendous benefit of using the spatial linear model is that block kriging [@v
 
 # Resilience Model {#sec-mb_resilience}
 
-The seagrass cover model quantifies bay-wide effects of influential drivers on seagrass cover and enables assessment of recovery trajectories at management-relevant scales. However, it does not quantify site-specific resilience. @gilby2023drivers propose identifying hotspots (i.e. brightspots, sites performing better than expected) and coldspots (sites performing worse than expected) based on model residuals exceeding confidence interval bounds. They argue that hotspots and coldspots offer significant utility for understanding drivers of site-specific resilience and informing management decisions.
+The seagrass cover model quantifies bay-wide effects of influential drivers on seagrass cover and enables assessment of recovery trajectories at management-relevant scales. However, it does not quantify site-specific resilience. @gilby2023drivers propose identifying hotspots (i.e. brightspots, sites performing better than expected) and coldspots (sites performing worse than expected) based on model residuals exceeding confidence interval bounds. They argue that hotspots and coldspots offer significant utility for understanding drivers of site-specific resilience and informing management decisions. @gilby2023drivers primarily focussed on specific hotspots, linking environmental variables to those sites. We build on that work by using the seagrass model residuals as a proxy for site-specific resilience, ant then characterizing the most important drivers of of that resilience, on average.
 
-Building on @gilby2023drivers, we use the raw seagrass model residuals (@fig-resid_fy_mb) as a response variable in a second spatial linear model used to study site-specific resilience in Moreton Bay. Model covariates included variables describing seagrass diversity and dominant species, and bathymetry, as well as proximity to and area of coral, seagrass, mangrove, and gastropod habitat (@tbl-mb-res-covariates). EHMP subzone was again included as a random effect. We used B-spline basis functions [@deboor1978practical; @eilers1996flexible] to describe nonlinear relationships between the response and potential covariates. The degree of these functions was informed by random forest partial dependence plots derived from a random forest model fitted to the seagrass model residuals.  
+## Data
+
+We used the raw seagrass model residuals (@fig-resid_fy_mb) as a the response variable in a second spatial linear model used to study site-specific resilience in Moreton Bay. Model covariates included variables describing seagrass diversity and dominant species, and bathymetry, as well as proximity to and area of coral, seagrass, mangrove, and gastropod habitat (@tbl-mb-res-covariates). EHMP subzone was again included as a random effect. Because we were interested in hypotheses testing rather than parsimony, we included all potential covariates as fixed effects in the model. Potential covariates have the following structure:
+
+* Coral Habitat Total Area is numeric from 0 msq to 616,180 meters squared (msq).
+* Seagrass Habitat Total Area is numeric from 0 msq to 773,161 msq.
+* Mangrove Habitat Total Area is numeric from 0 msq to 561,317 msq.
+* Gastropod Habitat Total Area is numeric from 0 msq to 114,795 msq.
+* Distance to Coral Habitat is numeric from 0 m to 35,387 m.
+* Distance to Seagrass Habitat is numeric from 0 m to 11,382 m.
+* Distance to Mangrove Habitat is numeric from 0 m to 27,617 m.
+* Distance to Gastropod Habitat is numeric from 0 m to 32,034 m.
+* Species Richness is numeric (integer) from 0 to 4 unique species.
+* Habitat Count is numeric (integer) from 0 to 4 unique habitats.
+* Dominant Species represents the dominant seagrass species and has seven levels: "Absent", "CS", "HD", "HO", "HS", "SI", and "ZMHU".
+* Bathymetry Mean Depth is numeric from -35.95 m to 0.79 m.
+* Bathymetry Mean Curvature is numeric from -0.002 degrees to 0.0001 degrees.
+* Bathymetry Mean Slope is numeric from 0.009 degrees to 4.27 degrees.
+* EHMP subzone is a categorical variable with eleven levels: Bramble Bay, Broadwater, Central Bay, Deception Bay, Eastern Banks, Moreton Bay Open Coastal Waters, North-Eastern Moreton Bay, Northern Banks Open Coastal Waters, South-Eastern Moreton Bay, Southern Bay, and Waterloo Bay (@fig-ehmp_subzone). 
+
+We expected there to be nonlinear relationships between the response and covariates and so we used B-spline basis functions [@deboor1978practical; @eilers1996flexible] to describe these relationships. The degree of these functions was informed by partial dependence plots derived from a random forest model fitted to the seagrass model residuals (@tbl-res_vars_mb). 
 
 
 
@@ -345,29 +365,27 @@ Building on @gilby2023drivers, we use the raw seagrass model residuals (@fig-res
 
 
 
-
-
-::: {#tbl-res_vars_mb .cell tbl-cap='Moreton Bay resilience variables considered for modeling.'}
+::: {#tbl-res_vars_mb .cell tbl-cap='Covariates included in the resilience model, including whether they were a fixed or random effect, and the nonlinearity degree of the B-splines basis function.'}
 ::: {.cell-output-display}
 
 
-|Variable                      |Effect |Included | Nonlinearity Degree|
-|:-----------------------------|:------|:--------|-------------------:|
-|Coral Habitat Total Area      |Fixed  |Yes      |                   2|
-|Seagrass Habitat Total Area   |Fixed  |Yes      |                   2|
-|Mangrove Habitat Total Area   |Fixed  |Yes      |                   2|
-|Gastropod Habitat Total Area  |Fixed  |Yes      |                   2|
-|Distance to Coral Habitat     |Fixed  |Yes      |                   3|
-|Distance to Seagrass Habitat  |Fixed  |Yes      |                   2|
-|Distance to Mangrove Habitat  |Fixed  |Yes      |                   2|
-|Distance to Gastropod Habitat |Fixed  |Yes      |                   2|
-|Species Richness              |Fixed  |Yes      |                   1|
-|Habitat Count                 |Fixed  |Yes      |                   2|
-|Dominant Species              |Fixed  |Yes      |                  NA|
-|Bathymetry Mean Depth         |Fixed  |Yes      |                   2|
-|Bathymetry Mean Curvature     |Fixed  |Yes      |                   2|
-|Bathymetry Mean Slope         |Fixed  |Yes      |                   2|
-|EHMP Subzone                  |Random |Yes      |                  NA|
+|Variable                      |Effect | Degree|
+|:-----------------------------|:------|------:|
+|Coral Habitat Total Area      |Fixed  |      2|
+|Seagrass Habitat Total Area   |Fixed  |      2|
+|Mangrove Habitat Total Area   |Fixed  |      2|
+|Gastropod Habitat Total Area  |Fixed  |      2|
+|Distance to Coral Habitat     |Fixed  |      3|
+|Distance to Seagrass Habitat  |Fixed  |      2|
+|Distance to Mangrove Habitat  |Fixed  |      2|
+|Distance to Gastropod Habitat |Fixed  |      2|
+|Species Richness              |Fixed  |      1|
+|Habitat Count                 |Fixed  |      2|
+|Dominant Species              |Fixed  |     NA|
+|Bathymetry Mean Depth         |Fixed  |      2|
+|Bathymetry Mean Curvature     |Fixed  |      2|
+|Bathymetry Mean Slope         |Fixed  |      2|
+|EHMP Subzone                  |Random |     NA|
 
 
 :::
@@ -375,26 +393,8 @@ Building on @gilby2023drivers, we use the raw seagrass model residuals (@fig-res
 
 
 
-@gilby2023drivers primarily focussed on specific hotspots, linking environmental variables to those sites. Here, our aim is to characterize the most important drivers of resilience, on average. Because we were interested in hypotheses testing rather than parsimony, we included all potential covariates as fixed effects in the model.  (@tbl-res_vars_mb), which have the following structure:
 
-
-* The "Coral Habitat Total Area" is numeric from 0 msq to 616,180 msq.
-* The "Seagrass Habitat Total Area" is numeric from 0 msq to 773,161 msq.
-* The "Mangrove Habitat Total Area" is numeric from 0 msq to 561,317 msq.
-* The "Gastropod Habitat Total Area" is numeric from 0 msq to 114,795 msq.
-* The "Distance to Coral Habitat" is numeric from 0 m to 35,387 m.
-* The "Distance to Seagrass Habitat" is numeric from 0 m to 11,382 m.
-* The "Distance to Mangrove Habitat" is numeric from 0 m to 27,617 m.
-* The "Distance to Gastropod Habitat" is numeric from 0 m to 32,034 m.
-* The "Species Richness" is numeric (integer) from 0 unique species to 4 unique species.
-* The "Habitat Count" is numeric (integer) from 0 unique habitats to 4 unique habitats.
-* The "Dominant Species" has seven levels: "Absent", "CS", "HD", "HO", "HS", "SI", and "ZMHU".
-* The "Bathymetry Mean Depth" is numeric from -35.95 m to 0.79 m.
-* The "Bathymetry Mean Curvature" is numeric from -0.002 degrees to 0.0001 degrees.
-* The "Bathymetry Mean Slope" is numeric from 0.009 degrees to 4.27 degrees.
-* The "EHMP subzone" variable has eleven levels: Bramble Bay, Broadwater, Central Bay, Deception Bay, Eastern Banks, Moreton Bay Open Coastal Waters, North-Eastern Moreton Bay, Northern Banks Open Coastal Waters, South-Eastern Moreton Bay, Southern Bay, and Waterloo Bay (@fig-ehmp_subzone). 
-
-## Model Fit
+## Spatial Linear Model
 
 
 ::: {#tbl-mb-res-covariates .cell tbl-cap='ANOVA table of covariates in the Moreton Bay resilience model.'}
@@ -423,10 +423,10 @@ Building on @gilby2023drivers, we use the raw seagrass model residuals (@fig-res
 :::
 
 
-From @tbl-mb-res-covariates, we find strong evidence ($p$-value < 0.001) that dominant species, species richness, and bathymetry mean depth are associated with resilience: 
+The ANVOVA table for the final resilience model (@tbl-mb-res-covariates) shows strong evidence ($p$-value < 0.001) that dominant species, species richness, and bathymetry mean depth are associated with resilience: 
 
 * Dominant Species: The estimated (marginal) average resilience score is largest for CS (38.4), followed by ZMHU (18.8), HS (10.8), SI (10.7), HO (3.7), and HD (-3.1).
-* Species Richness: An increase of species richness by one species was associated with an average increase in resilience by approximately two points (@fig-mb_res_rich_bath).
+* Species Richness: An increase of species richness by one species was associated with an average increase in resilience by approximately two units (@fig-mb_res_rich_bath).
 * Bathymetry Mean Depth: Deeper sites tended to be more resilient than shallower sites, on average (@fig-mb_res_rich_bath). 
 
 We found moderate evidence ($p$-value < 0.1) that bathymetry mean curvature, gastropod habitat total area, and bathymetry mean slope are associated with resilience: 
@@ -435,7 +435,7 @@ We found moderate evidence ($p$-value < 0.1) that bathymetry mean curvature, gas
 * Gastropod Habitat Total Area: Sites with more gastropod habitat area tended to be more resilient than sites with less gastropod habitat area.
 * Bathymetry Mean Slope: Sites with less extreme slopes (between zero and one) tended to have increasing resilience with slope, while sites with more extreme slopes (greater than one) tended to have decreasing resilience with slope.
 
-We found little evidence ($p$-value > 0.1) the remaining variables were associated with resilience, after controlling for other modeled variables.
+We found little evidence ($p$-value > 0.1) the remaining variables were associated with resilience, after controlling for other model covariates.
 
 
 
@@ -452,16 +452,18 @@ We found little evidence ($p$-value > 0.1) the remaining variables were associat
 :::
 
 
-## Alternative Approaches
+## Random forest model
 
-We also studied resilience using a random forest fit to the same residuals. Largely, we found similar results as the spatial linear model. Notably, for the random forest:
+As mentioned previously, we also fit a random forest model to the seagrass model residuals.Largely, we found similar results as the spatial linear model. Notably, for the random forest:
 
 * Dominant species was most important, with a similar ranking of resilient species as for the spatial linear model approach (e.g., CS, ZMHU most resilient and Absent least resilient).
 * Species richness was second-most important, with a general increasing trend in resilience with richness.
-* Distance to gastropod habitat was third-most important, with a decreasing trend at small distances (less than 15,000 meters) and an increasing trend at large distances (greater than 15,000 meters).
-* Bathymetry mean depth was fourth-most important, with a general decreasing trend with decreasing depth (@fig-rf_bathy), similar to the spatial linear model.
+* Distance to gastropod habitat was third-most important, with a decreasing trend at relatively short distances (< 15,000 m) and an increasing trend at large distances (> 15,000 m).
+* Bathymetry mean depth was fourth-most important variable, with a general decreasing trend with decreasing depth (@fig-rf_bathy), which is similar to the spatial linear model results.
 * Distance to gastropod habitat, distance to mangrove habitat, distance to coral habitat, and seagrass area had similar importance as the remaining bathymetry variables.
 * The remaining variables (distance to seagrass habitat, mangrove area, EHMP subzone, habitat count, coral area, and gastropod area) were least important.
+
+The consistency between the two resilience models and their variable importance rankings reinforce the spatial linear model's identification of dominant species, species richness, and bathymetry mean depth as key resilience drivers.
 
 
 ::: {.cell}
@@ -474,32 +476,32 @@ We also studied resilience using a random forest fit to the same residuals. Larg
 
 # Limitations and Future Suggestions
 
-While the spatial linear model was useful for characterizing broad patterns related to tidal range, sediment type, temperature, and turbidity and site-specific patterns capturing resilience, all while accounting for spatial dependence, there are some limitations. First, the eReefs water quality covariates are based on modeled data that are not directly observed in the field, potentially propagating modeling error. Second, there are many correlated water quality variables, making it hard (for any model) to isolate the effects of each component of water quality pre- and post-flood. Third, the lack of baseline mean salinity in the 90 days prior to sampling makes it challenging to directly study the effect of mean salinity during the flood period. Fourth, there is a lack of seagrass cover data immediately after the flood -- the first post-flood sampling effort occurred four months after the flood. Fifth, there is a lack of additional data sources that could help quantify the impact of local-scale drivers of total cover pre- and post-flood, potentially varying across both space and time (e.g., light attenuation, biological interactions, etc.). Sixth, the locations at which data were collected were not randomly sampled, which helps to guard against preferential sampling [@diggle2010preferential] and provides more robust and representative data sources [@dumelle2022comparison].
+While the spatial linear model was useful for characterizing broad patterns in seagrass cover related to tidal range, sediment type, temperature, and turbidity and site-specific patterns capturing resilience, all while accounting for spatial dependence, there are some limitations. First, the eReefs water quality covariates are based on modeled data that are not directly observed in the field, potentially propagating modeling error. Second, there are many correlated water-quality variables, making it difficult (for any model) to isolate the effects of each component of water quality pre- and post-flood. Third, the lack of a covariate describing mean salinity in the 90 days prior to sampling makes it challenging to directly study the effect of mean salinity during the flood period. Fourth, seagrass cover data was not collected in the first four months following the flood. It is therefore unclear whether the seagrass data collected in the 2022-2023 financial year fully describe flood impacts. Finally, covariates representing local-scale drivers of seagrass cover (e.g., light attenuation, biological interactions, etc.) were not available, which might explain some additional variability in the response through space and time. 
 
 # Revisiting the Research Questions
 
 **Research Question 1**: Can we identify water quality covariates that act as triggers for seagrass cover management responses? Are these triggers different based on whether they result from a specific event (e.g., flood) or are ambient?
 
-We identified ambient 90-day turbidity, turbidity during the flood event, and ambient 90-day water temperature as significant water quality triggers for seagrass cover responses. Our results suggest that ambient and flood-related turbidity act through distinct mechanisms and at different magnitudes; a one-unit increase in 90-day mean turbidity was associated with a 7.18 percentage point decrease in total cover, while the effect of flood turbidity decayed with time since the flood. Across tidal ranges, intertidal sites supported the highest average total cover (26.89%), followed by shallow subtidal (16.51%) and deep subtidal (4.88%), suggesting that management thresholds may need to be calibrated differently depending on depth zone, as deeper sites with inherently lower cover may be disproportionately sensitive to turbidity increases. Similarly, sediment type affected baseline cover levels, as sites with muddy sand and sandy mud substrates supported higher average cover than sand or rock sites. Together, these results suggest that management triggers should differ depending on whether the driver is chronic ambient turbidity or an acute flood event, and should further account for the tidal and sediment context of the sites in question (e.g., perhaps turbidity-driven management responses are most important in areas of densely populated seagrass).
+We identified ambient 90-day turbidity, turbidity during the flood event, and ambient 90-day water temperature as significant water quality covariates in the seagrass cover model. Our results suggest that ambient and flood-related turbidity act through distinct mechanisms and at different magnitudes; a one-unit increase in 90-day mean turbidity was associated with a 7.18 percentage point decrease in total cover, while the effect of flood turbidity decayed with time since the flood. Across tidal ranges, intertidal sites supported the highest average total cover (26.89%), followed by shallow subtidal (16.51%) and deep subtidal (4.88%), suggesting that management thresholds may need to be calibrated differently depending on depth zone, as deeper sites with inherently lower cover may be disproportionately sensitive to turbidity increases. Similarly, sediment type affected baseline cover levels, as sites with muddy sand and sandy mud substrates supported higher average seagrass cover than sand or rock sites. Together, these results suggest that management triggers should differ depending on whether the driver is chronic ambient turbidity or an acute flood event, and should further account for the tidal and sediment context of the sites in question.
 
 
 **Research Question 2**: Did seagrass cover improve after the flood event(s)? If so, how and where?
 
-Total seagrass cover improved bay-wide between 2022–2023 and 2023–2024, suggesting the system has been recovering since the flood. However, recovery was spatially heterogeneous — Deception Bay and the Marine National Park Zone returned to pre-flood cover levels, while Southern Bay and the General Use Zone lagged considerably behind. Recovery was also relatively slow compared to the magnitude of the impact in the intertidal tidal range compared to shallow and deep subtidal ranges, suggesting that intertidal sites may warrant prioritized management attention immediately following floods.
+Total seagrass cover improved throughout Moreton Bay between 2022–2023 and 2023–2024, suggesting the system has been recovering since the flood. However, recovery was spatially heterogeneous; Deception Bay and the Marine National Park zone returned to pre-flood cover levels, while Southern Bay and the General Use Zone lagged considerably behind. Recovery was also relatively slow compared to the magnitude of the impact in the intertidal tidal range compared to shallow and deep subtidal ranges, suggesting that intertidal sites may warrant prioritized management attention immediately following floods.
 
 **Research Question 3**: Can we identify site-specific resilience indicators, which describe where recovery is likely to be enhanced or impeded?  What factors contribute to seagrass resilience?
 
-We identified several site-specific indicators of seagrass resilience. Dominant species, species richness, and bathymetry mean depth were the strongest predictors of resilience, with sites dominated by CS or ZMHU species, higher species richness, and greater water depth tending to outperform model expectations and hence, infer greater resilience. Gastropod habitat area, bathymetric curvature, and slope provided moderate additional explanatory power. These findings suggest that management actions aimed at protecting structurally diverse, species-rich meadows at deeper sites are likely to be most effective at improving resilience, while sites with low species richness dominated by other species (or no seagrass) may require more active intervention to support recovery.
+We identified several site-specific indicators of seagrass resilience. Dominant species, species richness, and bathymetry mean depth were the strongest predictors of seagrass cover resilience, with sites dominated by CS or ZMHU species, higher species richness, and greater water depth tending to outperform model expectations and hence, infer greater resilience. Gastropod habitat area, bathymetric curvature, and slope provided moderate additional explanatory power. These findings may suggest that deeper, species-rich meadows dominated by CS and ZMHU exhibit a high level of resilience, while sites with low species richness and/or dominated by other species may require more active intervention to support recovery.
 
-# Discussion
+# Summary
 
-In this report we apply a rigorous, spatially explicit statistical framework to characterize the drivers, recovery, and resilience of seagrass cover in Moreton Bay across a three-year monitoring period that included the 2022 Moreton Bay flood event. The analytical approach taken here is well-suited to the structure and scale of the data, and the findings have direct implications for adaptive management of the bay's seagrass ecosystem.
+We applied a rigorous, spatially explicit statistical framework to characterize the drivers, recovery, and resilience of seagrass cover in Moreton Bay across a three-year monitoring period that included the 2022 Moreton Bay flood event. The analytical approach taken here is well-suited to the structure and scale of the data, and the findings have direct implications for adaptive management of the bay's seagrass ecosystem.
 
-The use of spatial linear models as the primary analytical framework is well-justified from both statistical and ecological perspectives. Total percent seagrass cover observations collected across the bay are inherently spatially structured, as nearby sites share similar environmental conditions, water quality and disturbance histories, as well as ecological communities. Models that ignore this dependence may well provide misleading results and inference. By explicitly modeling spatial dependence via a spatial covariance function, the analyses presented here produce more reliable estimates of covariate effects and more honest characterizations of uncertainty than a conventional non-spatial model would provide. These models are typically also more interpretable and characterize uncertainty more effectively than machine learning models. The inclusion of EHMP subzone as a random effect further accounts for structured variation among management-relevant regions of the bay, ensuring that covariate estimates reflect within-subzone patterns rather than being confounded by between-subzone differences in baseline cover. The block kriging helps understand bay-wide trends and can immediately characterize bay-wide predictions on the original total seagrass cover scale (0-100), rather than a transformed scale; providing a flexible framework for scenario modeling under future flood conditions and climate scenarios.
+The use of spatial linear models as the primary analytical framework is well-justified from both statistical and ecological perspectives. Total percent seagrass cover observations collected across the bay are inherently spatially structured, as nearby sites share similar environmental conditions, water quality and disturbance histories, as well as ecological communities. Models that ignore this dependence may well provide misleading results and inference. By explicitly modeling spatial dependence via a spatial covariance function, the analyses presented here produce more reliable estimates of covariate effects and more honest characterizations of uncertainty than a conventional non-spatial model provides. These models are typically also more interpretable and characterize uncertainty more effectively than machine learning models. The inclusion of EHMP subzone as a random effect further accounts for structured variation among management-relevant regions of the bay, ensuring that covariate estimates reflect within-subzone patterns rather than being confounded by between-subzone differences in baseline cover. The block kriging helps understand bay-wide trends and can immediately characterize bay-wide predictions on the original total seagrass cover scale (0-100), rather than a transformed scale required for generalized linear models; providing a flexible framework for scenario modeling under future flood conditions and climate scenarios.
 
-The use of a two-stage modeling framework -- first modeling total cover as a function of water quality and geographic drivers, then modeling the residuals from that model as a function of site-level resilience variables -- is a structured approach to separating bay-wide environmental patterns from site-specific ecological resilience capacity. This builds directly on the framework proposed by @gilby2023drivers to help understand drivers of average resilience and provide useful insight needed to inform broader conservation strategies. The robustness of the findings is further supported by the consistency of results across multiple modeling approaches (e.g., spatial beta regression model, random forest, etc.), which provides evidence that the relationships identified are genuine rather than resulting solely from specific modeling response frameworks. 
+The use of a two-stage modeling framework -- first modeling total seagrass cover as a function of water quality and geographic drivers, then modeling the seagrass model residuals fas a function of site-level resilience covariates -- is a structured approach to separating bay-wide environmental patterns from site-specific ecological resilience capacity. This builds directly on the framework proposed by @gilby2023drivers to help understand drivers of average resilience and provide useful insight needed to inform broader conservation strategies. The robustness of the findings is further supported by the consistency of results across multiple modeling approaches (e.g., spatial beta regression model, random forest, etc.), which provides evidence that the relationships identified are genuine rather than resulting solely from specific modeling frameworks. 
 
-Overall, the results described in this report provide a quantitative, spatially structured foundation for adaptive decision making. The understanding of important water quality and geographic variables, average predictions via block Kriging, and the study of site-level resilience indicators provides evidence that can inform  temporally targeted, context-specific interventions throughout the bay.
+Overall, the results described in this report provide a quantitative, spatially structured foundation for adaptive decision making. The understanding of important water quality and geographic variables, average predictions via block Kriging, and the study of site-level resilience indicators provides data-driven evidence that can inform  temporally targeted, context-specific interventions throughout the bay.
 
 \clearpage
 
