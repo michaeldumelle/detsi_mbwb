@@ -169,7 +169,7 @@
 \urlstyle{same}
 \hypersetup{
   pdftitle={Moreton Bay Seagrass Resilience Modelling},
-  pdfauthor={Michael Dumelle; Erin E. Peterson},
+  pdfauthor={Michael Dumelle (Dumelle Consulting); Erin E. Peterson (EP Consulting)},
   colorlinks=true,
   linkcolor={blue},
   filecolor={Maroon},
@@ -187,8 +187,9 @@
 \makeatother
 \subtitle{DRFA 21/22 Biodiversity Conservation Marine Final Report
 Project}
-\author{Michael Dumelle \and Erin E. Peterson}
-\date{2026-06-01}
+\author{Michael Dumelle (Dumelle Consulting) \and Erin E. Peterson (EP
+Consulting)}
+\date{2026-05-11}
 \begin{document}
 \maketitle
 
@@ -246,7 +247,12 @@ observations across three financial years (2020-2021, 2022-2023, and
 2023-2024), where water quality and geographic covariates were also
 available. Of the 7657 observations, 1995 were collected in 2020-2021
 (pre-flood), 3329 in 2022-2023 (1-year post-flood), and 2333 in
-2023-2024 (2-years post-flood) (Table~\ref{tbl-n_fy_mb}).
+2023-2024 (2-years post-flood) (Table~\ref{tbl-n_fy_mb}). There were six
+seagrass species found in the dataset: \emph{Halophila decipiens} (HD),
+\emph{Halophila spinulosa} (HS), \emph{Halophila ovalis} (HO),
+\emph{Halodule uninervis} / \emph{Zostera muelleri} (ZMHU),
+\emph{Syringodium isoetifolium} (SI) and \emph{Cymodocea serrulata}
+(CS).
 
 \begin{table}
 
@@ -272,13 +278,12 @@ Financial Year & Sample Size & Percent of Total \\
 
 \end{table}%
 
-Seagrass cover is a percentage that ranges from 0 (no seagrass) to 100
-(complete seagrass cover). Figure~\ref{fig-cover_fy_mb} shows total
-cover by financial year throughout the Bay. Total cover tends to be
-highest near the eastern shoreline of the Bay and lowest in the middle
-of the Bay. Note that 2022-2023 (post-flood) had the largest number of
-seagrass cover samples, as well as the only samples collected in the
-middle of the Bay.
+Seagrass cover is a percentage ranging from 0 (no seagrass) to 100
+(complete seagrass cover). Total cover tends to be highest near the
+eastern shoreline of the Bay and lowest in the middle
+(Figure~\ref{fig-cover_fy_mb}). Note that 2022-2023 (post-flood) had the
+the largest number of seagrass cover samples, as well as the only
+samples collected in the middle of the Bay.
 
 \begin{figure}
 
@@ -300,10 +305,10 @@ temporal windows (Table~\ref{tbl-wq_vars_mb}). Ambient water quality
 variables were based on the mean, minimum, and maximum values for three
 periods: 7, 30, and 90 days prior to sampling. Ambient variables were
 also calculated representing the frequency of days water quality
-thresholds were exceeded (above or below) and the maximum spell
-(i.e.~duration) of days those thresholds were continuously exceeded
-during the time periods. Similar water quality variables representing
-flood-event conditions were also calculated for a 30-day flood period.
+thresholds were exceeded (above or below) and the maximum spell (i.e.,
+duration) of days those thresholds were continuously exceeded during the
+time periods. Similar water quality variables representing flood-event
+conditions were also calculated for a 30-day flood period.
 
 \begin{table}
 
@@ -351,10 +356,10 @@ Turbidity (NTU) & Ambient & 30, 7, 90 & Mean &  \\
 
 \end{table}%
 
-Additional covariates were also provided by EcoFutures Consulting, which
-are used to represent geographic features, proximity to rivers, and
-depth, as well as the years since the flood and the seagrass growing
-season. These variables have the following structure:
+Additional covariates were provided by EcoFutures Consulting
+representing geographic features, proximity to rivers, and depth, as
+well as the years since the flood and seagrass growing season. These
+variables have the following structure:
 
 \begin{itemize}
 \tightlist
@@ -403,26 +408,25 @@ Moreton Bay.}
 Extensive exploratory analyses were undertaken to 1) understand the data
 structure, 2) visualize spatial and temporal patterns in the the data,
 3) identify outliers/errors, 4) examine correlations between potential
-covariates and the seagrass cover,, as well as multicollinearity among
+covariates and the seagrass cover, as well as multicollinearity among
 covariates, 5) compare the fit of various models, and 6) evaluate model
 assumptions.
 
 Results revealed substantial collinearity among ambient and
 flood-related water-quality variables, as expected given their nested
 temporal windows and threshold values. We retained only one variable
-from each correlated group. We prioritized including sediment type,
-tidal range, turbidity, temperature, and time since flood given a goal
-was to study the extent to which these variables were related to
-seagrass cover. We removed other variables showing no meaningful
+from each correlated group and prioritized sediment type, tidal range,
+turbidity, temperature, and time since flood when making these
+decisions. We also removed other variables showing no meaningful
 association with seagrass cover or where the relationship lacked
-biological plausibility. Salinity metrics had little usable pre flood
-data, which did not show strong relationships with seagrass cover.
-Geographic variables exhibited less collinearity than water quality
-variables; however, we removed the distance to the nearest river outlet
-and the nearest river variables due to weak associations with seagrass
-cover after accounting for other variables in the model. Growing season
-was excluded because a simple monthly proxy inadequately captures
-seasonal seagrass growth dynamics.
+biological plausibility. This included all of the salinity variables,
+which had little variability and did not exhibit strong relationships
+with seagrass cover. Geographic variables exhibited less collinearity
+than water quality variables; however, we removed the distance to the
+nearest river outlet and the nearest river variables due to weak
+associations with seagrass cover after accounting for other model
+covariates. Growing season was excluded because a simple monthly proxy
+inadequately captures seasonal seagrass growth dynamics.
 
 The final set of potential covariates considered in the modelling
 included mean turbidity in the 90 days prior to sampling, mean turbidity
@@ -445,44 +449,46 @@ There were several reasons for fitting these initial models. The
 nonspatial linear model provided a useful baseline to compare the
 spatial linear model against, elucidating the impact of spatial
 dependence on model fit. The spatial beta regression model is a
-generalized linear model used to characterize proportion data ranging
-between zero and one. To adhere to this restriction, total seagrass
-cover was 1) scaled to a proportion and 2) if exactly zero or one, set
-to 0.01 or 0.99, respectively. The spatial gamma regression model is a
-generalized linear model used to characterize skewed positive data. To
-adhere to this restriction, a value of 0.01 was added to seagrass cover
-observations that were equal to zero. Finally, the random forest model
-provided a useful assessment of a machine learning approach, which
-requires fewer distributional assumptions than the aforementioned
-statistical approaches and more naturally describes nonlinear
-relationships between variables (Appendix 1). We also characterized
-random forest effects using partial dependence plots
+generalized linear model used to characterize bounded proportional data
+ranging between zero and one. To adhere to this restriction, total
+seagrass cover was 1) scaled to a proportion and 2) if exactly zero or
+one, set to 0.01 or 0.99, respectively. The spatial gamma regression
+model is a generalized linear model used to characterize skewed positive
+data. To adhere to this restriction, a value of 0.01 was added to
+seagrass cover observations that were equal to zero. Finally, the random
+forest model provided a useful assessment of a machine learning
+approach, which requires fewer distributional assumptions than the
+aforementioned statistical approaches and more naturally describes
+nonlinear relationships between variables (Appendix 1). We also
+characterized random forest effects using partial dependence plots
 \citep{greenwell2017pdp}, which isolate the marginal contribution of a
 variable while holding other variables at their observed values.
-Out-of-sample predictions were then used to calculate the mean bias
-(MBias) and root-mean-square-prediction error (RMSPE) for each model.
+Out-of-sample predictions were generated for the four statistical models
+using leave-one-out cxross validation, while out-of-bag validation was
+used for the random forest model. These out-of-sample predictions were
+then used to calculate the mean bias (MBias) and
+root-mean-square-prediction error (RMSPE) for each model.
 
 The results of this initial model comparison showed that the spatial
 linear model had the lowest RMSPE, followed by the random forest,
 generalized linear models, and the nonspatial linear model
-(Table~\ref{tbl-mb_cv}). The nonspatial and spatial linear models also
-had much lower mean bias values than the random forest model, while the
-two generalized linear models produced unacceptably biased predictions.
-Nevertheless, all five approaches identified similar relationships
-between seagrass cover and the covariates, in the directions expected.
-Random forest partial dependence plots \citep{greenwell2017pdp}
-suggested that linear effects of the model variables were generally
-reasonable. Given these results and the ease of interpretability of the
-spatial linear model, we chose to use a spatial linear modeling
-framework for the Moreton Bay seagrass cover model.
+(Table~\ref{tbl-mb_cv}). Mean bias (MBias) tended to be small relative
+to root-mean-squared-prediction error (RMSPE). The nonspatial and
+spatial linear models also had much lower mean bias values than the
+random forest model, while the two generalized linear models produced
+unacceptably biased predictions. Nevertheless, all five approaches
+identified similar relationships between seagrass cover and the
+covariates, in the directions expected. Random forest partial dependence
+plots \citep{greenwell2017pdp} suggested that linear effects of the
+model variables were generally reasonable. We chose to use a spatial
+linear modeling framework for the Moreton Bay seagrass model based on
+these results and the ease of interpretability.
 
 \begin{table}
 
 \caption{\label{tbl-mb_cv}Moreton Bay out of sample prediction metrics
-for the various approaches. Mean bias (MBias) tended to be small
-relative to root-mean-squared-prediction error (RMSPE). For LM, SPLM,
-SPGLM-Beta, SPGLM-Gamma, leave-one-out cross validation was used. For
-RF, out of bag validation was used.}
+for the five modeling approaches, including mean bias (MBias) and root
+mean square prediction error (RMSPE).}
 
 \centering{
 
@@ -491,11 +497,11 @@ RF, out of bag validation was used.}
   \toprule
 Approach & MBias & RMSPE \\ 
   \midrule
-SPLM & -0.02 & 18.41 \\ 
-  RF & -0.11 & 18.84 \\ 
-  SPGLM-Beta & -2.76 & 19.60 \\ 
-  SPGLM-Gamma & 5.42 & 20.07 \\ 
-  LM & 0.00 & 22.54 \\ 
+Spatial Linear Model & -0.02 & 18.41 \\ 
+  Random Forest & -0.11 & 18.84 \\ 
+  Spatial GLM - Beta & -2.76 & 19.60 \\ 
+  Spatial GLM - Gamma & 5.42 & 20.07 \\ 
+  Linear Model & 0.00 & 22.54 \\ 
    \bottomrule
 \end{tabular}
 
@@ -520,15 +526,12 @@ sampling.}
 A suite of spatial linear models (Appendix 1, Equation~\ref{eq-splm1}),
 with exponential spatial covariance functions and a random effect for
 EHMP subzone, were fit using the \texttt{splm()} function in
-\texttt{spmodel}. Parameters were estimated using restricted maximum
-likelihood. Models were compared primarily using leave-one-out cross
-validation, though likelihood-based approaches like AIC or BIC could
-also be used (when the fixed effects change across models, AIC and BIC
-are directly comparable only when the estimation method is maximum
-likelihood). Ultimately, after considering a handful of models alongside
-fit statistics (e.g., leave-one-out cross validation error) and the
-research questions of interest, we settled on a final model, which is
-described next.
+\texttt{spmodel} \citet{dumelle2023spmodel}. Parameters were estimated
+using restricted maximum likelihood and models primarily compared using
+leave-one-out cross validation; though AIC or BIC could also be used if
+parameters were estimated using maximum likelihood. In addition, the
+relationships between seagrass cover and covariates needed to be
+plausible.
 
 The final total seagrass cover model for Moreton Bay included the
 following covariates: tidal range, sediment type, 90-day mean
@@ -544,7 +547,7 @@ produced similar results.
 \begin{table}
 
 \caption{\label{tbl-mb_tc_splm_vars}Covariates in the final Moreton Bay
-total cover model, their type (numeric or categorical), and if
+seagrass cover model, their type (numeric or categorical), and if
 categorical, the number of unique levels.}
 
 \centering{
@@ -733,10 +736,9 @@ are several EHMP subzones and Marine Park zones that have recovered to
 pre-flood levels (e.g., Deception Bay, Marine National Park Zone), while
 others have not (e.g., Southern Bay, General Use Zone). When we examine
 recovery by tidal range (Figure~\ref{fig-bk_mb_tidal}), we see that
-seagrass cover is recovering effectively across all tidal ranges. When
-we examine recovery for the whole of Moreton Bay
-(Figure~\ref{fig-bk_mb_all}), the model suggests that seagrass cover has
-improved since the 2022 flood.
+seagrass cover is recovering across all tidal ranges. When we examine
+recovery for the whole of Moreton Bay (Figure~\ref{fig-bk_mb_all}), the
+model suggests that seagrass cover has improved since the 2022 flood.
 
 \begin{figure}
 
@@ -761,10 +763,10 @@ interval.}
 
 }
 
-\caption{\label{fig-bk_mb_zone}Average total cover predictions by
-conservation zone. Red dots indicate the mean from the raw data. Black
-dots indicate the predicted mean in the region alongside a prediction
-interval.}
+\caption{\label{fig-bk_mb_zone}Average total seagrass cover predictions
+by conservation zone. Red dots indicate the mean from the raw data.
+Black dots indicate the predicted mean in the region alongside a
+prediction interval.}
 
 \end{figure}%
 
@@ -776,9 +778,10 @@ interval.}
 
 }
 
-\caption{\label{fig-bk_mb_tidal}Average total cover predictions by tidal
-range. Red dots indicate the mean from the raw data. Black dots indicate
-the predicted mean in the region alongside a prediction interval.}
+\caption{\label{fig-bk_mb_tidal}Average total seagrass cover predictions
+by tidal range. Red dots indicate the mean from the raw data. Black dots
+indicate the predicted mean in the region alongside a prediction
+interval.}
 
 \end{figure}%
 
@@ -790,9 +793,10 @@ the predicted mean in the region alongside a prediction interval.}
 
 }
 
-\caption{\label{fig-bk_mb_all}Average total cover predictions in Moreton
-Bay. Red dots indicate the mean from the raw data. Black dots indicate
-the predicted mean in the region alongside a prediction interval.}
+\caption{\label{fig-bk_mb_all}Average total seagrass cover predictions
+in Moreton Bay. Red dots indicate the mean from the raw data. Black dots
+indicate the predicted mean in the region alongside a prediction
+interval.}
 
 \end{figure}%
 
@@ -804,7 +808,7 @@ The seagrass cover model quantifies bay-wide effects of influential
 drivers on seagrass cover and enables assessment of recovery
 trajectories at management-relevant scales. However, it does not
 quantify site-specific resilience. \citet{gilby2023drivers} propose
-identifying hotspots (i.e.~brightspots, sites performing better than
+identifying hotspots (i.e., brightspots, sites performing better than
 expected) and coldspots (sites performing worse than expected) based on
 model residuals exceeding confidence interval bounds. They argue that
 hotspots and coldspots offer significant utility for understanding
@@ -822,7 +826,7 @@ resilience.
 We used the raw seagrass model residuals (Figure~\ref{fig-resid_fy_mb})
 as a the response variable in a second spatial linear model used to
 study site-specific resilience in Moreton Bay. Model covariates included
-variables describing seagrass diversity and dominant species, and
+variables describing seagrass richness and dominant species, and
 bathymetry, as well as distance to the nearest coral, seagrass,
 mangrove, or gastropod habitat, and the total area in msq of coral,
 seagrass, mangrove, or gastropod habitat within 500 m of the observation
@@ -837,7 +841,7 @@ the model. Potential covariates have the following structure:
   Coral Habitat Total Area is numeric from 0 msq to 616,180 meters
   squared (msq).
 \item
-  Seagrass Habitat Total Area is numeric from 0 msq to 773,161 msq.
+  Seagrass Habitat Total Areais numeric from 0 msq to 773,161 msq.
 \item
   Mangrove Habitat Total Area is numeric from 0 msq to 561,317 msq.
 \item
@@ -882,7 +886,7 @@ the model. Potential covariates have the following structure:
 \end{itemize}
 
 We expected there to be nonlinear relationships between the response and
-covariates so we accounted for them using B-spline basis functions
+covariates and we accounted for them using B-spline basis functions
 \citep{deboor1978practical, eilers1996flexible}. The degree of these
 functions was informed by partial dependence plots derived from a random
 forest model fitted to the seagrass model residuals
@@ -1091,7 +1095,7 @@ occur for both variables among the remaining species and subzones).}
 \end{figure}%
 
 As mentioned previously, we also fit a random forest model to the
-seagrass model residuals.Largely, we found similar results as the
+seagrass model residuals. Largely, the results were similar to the
 spatial linear model. Notably, for the random forest:
 
 \begin{itemize}
@@ -1108,7 +1112,7 @@ spatial linear model. Notably, for the random forest:
   decreasing trend at relatively short distances (\textless{} 15,000 m)
   and an increasing trend at large distances (\textgreater{} 15,000 m).
 \item
-  Bathymetry mean depth was fourth-most important variable, with a
+  Bathymetry mean depth was the fourth-most important variable, with a
   general decreasing trend with decreasing depth
   (Figure~\ref{fig-rf_bathy}), which is similar to the spatial linear
   model results.
@@ -1145,10 +1149,10 @@ While the spatial linear model was useful for characterizing broad
 patterns in seagrass cover related to tidal range, sediment type,
 temperature, and turbidity and site-specific patterns capturing
 resilience, all while accounting for spatial dependence, there are some
-limitations. First, the eReefs water quality covariates are based on
+limitations. First, the eReefs water-quality covariates are based on
 modeled data that are not directly observed in the field, potentially
 propagating modeling error. Second, there are many correlated
-water-quality variables, making it difficult (for any model) to isolate
+water-quality variables, making it difficult for any model to isolate
 the effects of each component of water quality pre- and post-flood.
 Third, the lack of a covariate describing mean salinity in the 90 days
 prior to sampling makes it challenging to directly study the effect of
@@ -1270,7 +1274,7 @@ the identification of important water quality and geographic variables,
 bay-wide predictions via block Kriging, and the characterization of
 site-level resilience indicators provide data-driven evidence that can
 inform temporally targeted, context-specific interventions throughout
-the bay.
+Moreton Bay.
 
 \clearpage
 
@@ -1282,14 +1286,15 @@ the bay.
 
 \section{Acknowledgements}\label{acknowledgements}
 
-The eReefs datasets (model simulations, satellite or in-situ
-observations) and software were produced as part of the eReefs project
-(ereefs.org.au), which is a collaboration between Australia's national
-science agency CSIRO, the Australian Institute of Marine Science (AIMS)
-and the Queensland Government, with observations obtained through the
-Integrated Marine Observing System (IMOS) and the Great Barrier Reef
-Marine Park Authority (GBRMPA). eReefs is funded by the Australian
-Government's Reef Trust.
+The seagrass cover dataset was provided by Science Under Sail Australia
+(SUSA; https://www.scienceundersail.com.au/). The eReefs datasets (model
+simulations, satellite or in-situ observations) and software were
+produced as part of the eReefs project (ereefs.org.au), which is a
+collaboration between Australia's national science agency CSIRO, the
+Australian Institute of Marine Science (AIMS) and the Queensland
+Government, with observations obtained through the Integrated Marine
+Observing System (IMOS) and the Great Barrier Reef Marine Park Authority
+(GBRMPA). eReefs is funded by the Australian Government's Reef Trust.
 
 \clearpage
 
