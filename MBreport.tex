@@ -406,8 +406,8 @@ Moreton Bay.}
 \subsubsection{Exploratory Analyses}\label{exploratory-analyses}
 
 Extensive exploratory analyses were undertaken to 1) understand the data
-structure, 2) visualize spatial and temporal patterns in the the data,
-3) identify outliers/errors, 4) examine correlations between potential
+structure, 2) visualize spatial and temporal patterns in the data, 3)
+identify outliers/errors, 4) examine correlations between potential
 covariates and the seagrass cover, as well as multicollinearity among
 covariates, 5) compare the fit of various models, and 6) evaluate model
 assumptions.
@@ -497,11 +497,11 @@ mean square prediction error (RMSPE).}
   \toprule
 Approach & MBias & RMSPE \\ 
   \midrule
-Spatial Linear Model & -0.02 & 18.41 \\ 
-  Random Forest & -0.11 & 18.84 \\ 
-  Spatial GLM - Beta & -2.76 & 19.60 \\ 
-  Spatial GLM - Gamma & 5.42 & 20.07 \\ 
-  Linear Model & 0.00 & 22.54 \\ 
+Spatial Linear Model & -0.016 & 18.415 \\ 
+  Random Forest & -0.111 & 18.838 \\ 
+  Spatial GLM - Beta & -2.759 & 19.599 \\ 
+  Spatial GLM - Gamma & 5.424 & 20.066 \\ 
+  Linear Model & 0.001 & 22.536 \\ 
    \bottomrule
 \end{tabular}
 
@@ -602,14 +602,13 @@ Intercept (Mud/Deep Subtidal) & -13.683 & -2.312 & 0.021 \\
 Table~\ref{tbl-mb-fixed} shows the fixed effects table from the fitted
 model. The reference group is the muddy and deep subtidal group, and the
 remaining sediment type and tidal range terms represent deviations from
-these baselines. For the numeric variables, all had large test
-statistics and small \(p\)-values (\(p\)-value \(<\) 0.01). While we can
-assess the overall significance of the numeric variables
-Table~\ref{tbl-mb-fixed}, we must perform an analysis of variance
-(ANOVA) to assess the overall significance of variables with many
-levels. Table~\ref{tbl-mb-covariates} shows these ANOVA results for the
-sediment type and tidal range variables, which had large test statistics
-and small \(p\)-values (\(p\)-value \(<\) 0.01). Together, these results
+these baselines. For the numeric variables, all had small \(p\)-values
+(\(p\)-value \(<\) 0.01). While we can assess the overall significance
+of the numeric variables Table~\ref{tbl-mb-fixed}, we must perform an
+analysis of variance (ANOVA) to assess the overall significance of
+variables with many levels. Table~\ref{tbl-mb-covariates} shows these
+ANOVA results for the sediment type and tidal range variables, which had
+small \(p\)-values (\(p\)-value \(<\) 0.01). Together, these results
 indicate all variables had a significant relationship with total
 seagrass cover. Here are some relevant takeaways from the model fit:
 
@@ -674,7 +673,7 @@ Tidal Range &    2 & 608.900 & 0.000 \\
 as a function of 90-day mean turbidity (left) and flood turbidity
 (right). Estimates (and confidence intervals) were evaluated at one year
 post flood, at the means of all other numeric variables, and for the
-intertidal depth range and sand sediment types.}
+intertidal range and sand sediment types.}
 
 \end{figure}%
 
@@ -813,11 +812,10 @@ expected) and coldspots (sites performing worse than expected) based on
 model residuals exceeding confidence interval bounds. They argue that
 hotspots and coldspots offer significant utility for understanding
 drivers of site-specific resilience and informing management decisions.
-\citet{gilby2023drivers} primarily focussed on specific hotspots,
-linking environmental variables to those sites. We build on that work by
-using the seagrass model residuals as a proxy for site-specific
-resilience, and then characterizing the most important drivers of that
-resilience.
+\citet{gilby2023drivers} primarily focused on specific hotspots, linking
+environmental variables to those sites. We build on that work by using
+the seagrass model residuals as a proxy for site-specific resilience,
+and then characterizing the most important drivers of that resilience.
 
 \subsection{Methods}\label{methods-1}
 
@@ -878,11 +876,11 @@ the model. Potential covariates have the following structure:
   seagrass observation point, excluding terrestrial areas, and is
   numeric from 0.009 degrees to 4.27 degrees.
 \item
-  EHMP subzone is a categorical variable with eleven levels: Bramble
-  Bay, Broadwater, Central Bay, Deception Bay, Eastern Banks, Moreton
-  Bay Open Coastal Waters, North-Eastern Moreton Bay, Northern Banks
-  Open Coastal Waters, South-Eastern Moreton Bay, Southern Bay, and
-  Waterloo Bay (Figure~\ref{fig-ehmp_subzone}).
+  EHMP subzone has eleven categorical levels: Bramble Bay, Broadwater,
+  Central Bay, Deception Bay, Eastern Banks, Moreton Bay Open Coastal
+  Waters, North-Eastern Moreton Bay, Northern Banks Open Coastal Waters,
+  South-Eastern Moreton Bay, Southern Bay, and Waterloo Bay
+  (Figure~\ref{fig-ehmp_subzone}).
 \end{itemize}
 
 We expected there to be nonlinear relationships between the response and
@@ -1003,9 +1001,8 @@ level, had a large test statistic and small \(p\)-value (\(p\)-value
 basis of at least degree two to capture nonlinearities. While we can
 assess the overall significance of species richness in
 Table~\ref{tbl-mb-res-fixed}, we must perform an analysis of variance
-(ANOVA) to assess the overall significance the remaining variables
-(which have at least two terms). Table~\ref{tbl-mb-res-anova} shows
-these ANOVA results; here are some relevant takeaways from both tables:
+(ANOVA) to assess the overall significance the remaining variables with
+multiple terms. Table~\ref{tbl-mb-res-anova} shows these ANOVA results.
 
 \begin{table}
 
@@ -1038,6 +1035,10 @@ Dominant Species &    6 & 1637.726 & 0.000 \\
 }
 
 \end{table}%
+
+We found strong evidence (\(p\)-value \textless{} 0.001) that dominant
+species, species richness, and bathymetry mean depth are associated with
+resilience:
 
 \begin{itemize}
 \tightlist
@@ -1087,10 +1088,9 @@ model covariates.
 }
 
 \caption{\label{fig-mb_res_rich_bath}Average species richness (left) and
-bathymetry mean depth (right) effects on resilience. Predictions (and
+bathymetry mean depth (right) effects on resilience. Estimates (and
 confidence intervals) were evaluated at the means of all other numeric
-variables and for the ZMHU species in the Southern Bay (similar trends
-occur for both variables among the remaining species and subzones).}
+variables and for the ZMHU species in the Southern Bay.}
 
 \end{figure}%
 
@@ -1163,8 +1163,9 @@ financial year fully describe flood impacts. Fifth, covariates
 representing local-scale drivers of seagrass cover (e.g., light
 attenuation, biological interactions, etc.) were not available, which
 might explain some additional variability in the response through space
-and time. Sixth, the location of sample sites was not generated randomly
-and could be subject to conscious or unconscious selection bias.
+and time. Sixth and finally, the location of sample sites was not
+generated randomly and could be subject to conscious or unconscious
+selection bias.
 
 \section{Revisiting the Research
 Questions}\label{revisiting-the-research-questions}
@@ -1263,7 +1264,7 @@ capacity. This builds directly on the framework proposed by
 \citet{gilby2023drivers} to help understand drivers of average
 resilience and provide useful insight needed to inform broader
 conservation strategies. The robustness of the findings is further
-supported by the consistency of results across multiple modeling
+supported by the general consistency of results across multiple modeling
 approaches (e.g., spatial beta regression model, random forest, etc.),
 which provides evidence that the relationships identified are genuine
 rather than resulting solely from specific modeling frameworks.
@@ -1374,9 +1375,10 @@ model. The spatial linear model is a \emph{mixed-effects model}
 y_i = \beta_0 + \beta_1x_{1, i} + \beta_2x_{2, i} + ... + \beta_p x_{p, i} + \tau_i + \epsilon_i,
 }\end{equation} where \(i = 1, 2, ..., n\) indexes the \(n\)
 observations. The quantity \(y_i\) is the response variable (for
-observation \(i\)), the \(\beta\) parameters are slope parameters
-controlling the covariates, \(x_{j, i}\) (for \(j = 1, 2, ..., p\)). The
-random error \(\tau_i\) is a spatial random error, and the random error
+observation \(i\)). The quantity \(\beta_j\) is a slope parameter that
+controls the average effect of the covariate \(x_{j, i}\) on \(y_i\)
+(while holding all other covariates constant). The random error
+\(\tau_i\) is a spatial random error, and the random error
 \(\epsilon_i\) is the nonspatial (i.e., independent) random error. The
 spatial random error is spatially structured, capturing spatial residual
 effects like environmental gradients we do not have data to fully
@@ -1460,8 +1462,9 @@ Kriging is the spatial analogue to best linear unbiased prediction
 spatial linear model produces BLUPs at each unobserved location of
 interest, alongside prediction intervals to characterize uncertainty.
 While useful, sometimes the goal is to create a BLUP for an entire
-region of interest. This technique, which builds upon the theoretical
-foundations of Kriging, is called block Kriging
+region of interest based on realized (i.e., observed) covariate values.
+This technique, which builds upon the theoretical foundations of
+Kriging, is called block Kriging
 \citep{ver2002sampling, cressie2006block}. The intuition is to make
 point predictions at a very dense grid in the study region and then
 average these predictions, appropriately characterizing uncertainty.
