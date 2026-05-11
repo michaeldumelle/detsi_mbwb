@@ -34,23 +34,11 @@ editor_options:
 bibliography: references.bib
 ---
 
-```{r}
-# loading software
-library(tidyverse)
-library(here)
-library(ranger)
-library(sf)
-library(knitr)
-library(broom)
-library(spmodel)
-library(pdp)
-library(emmeans)
-library(janitor)
-library(kableExtra)
-library(splines)
-library(patchwork)
-library(xtable)
-```
+
+::: {.cell}
+
+:::
+
 
 
 
@@ -67,97 +55,81 @@ Over the past few decades, various scientific studies have informed our current 
 
 ## Data
 
-```{r}
-#| label: read-wb
-dat <- read_sf(here("data", "WBsub_03-31-2026.gpkg"))
 
-# read in bay shapefiles
-bay <- read_sf(here("data", "WideBay_zones.shp")) %>%
-  st_transform(crs = 3113)
-```
+::: {.cell}
+
+:::
+
 
 The seagrass cover dataset was provided by EcoFutures Consulting. It included nearly 4000 seagrass cover observations in Wide Bay across several financial years (1998-1999, 1999-2000, 2000-2001, 2001-2002, 2021-2022, 2022-2023, and 2023-2024). The data from 1998-2002 were omitted as they were distant temporally and did not have corresponding eReefs water-quality data [@steven2019ereefs]. Thus we proceed with a subset of 2663 observations for modeling. Of the 2663 observations, 1073 were in 2021-2022, 524 were in 2022-2023, and 1066 were in 2023-2024 (@tbl-n_fy_wb). There were four seagrass species found in the dataset: *Halophila decipiens* (HD), *Halophila spinulosa* (HS), *Halophila ovalis* (HO), *Halodule uninervis* / *Zostera muelleri* (ZMHU).
 
-```{r}
-#| label: tbl-n_fy_wb
-#| tbl-cap: "The sample size and percent of total sample size for total percent seagrass cover observations in Wide Bay, by financial year."
-#| results: asis
-dat %>%
-  st_drop_geometry() %>%
-  tabyl(fy) %>%
-  adorn_totals(where = "row") %>%
-  adorn_pct_formatting() %>%
-  rename(`Financial Year` = fy, `Sample Size` = n, `Percent of Total` = percent) %>%
-  xtable() %>%
-  print(include.rownames = FALSE, floating = TRUE, booktabs = TRUE, comment = FALSE)
-```
+
+::: {#tbl-n_fy_wb .cell tbl-cap='The sample size and percent of total sample size for total percent seagrass cover observations in Wide Bay, by financial year.'}
+\begin{table}[ht]
+\centering
+\begin{tabular}{lrl}
+  \toprule
+Financial Year & Sample Size & Percent of Total \\ 
+  \midrule
+2021-2022 & 1073.00 & 40.3\% \\ 
+  2022-2023 & 524.00 & 19.7\% \\ 
+  2023-2024 & 1066.00 & 40.0\% \\ 
+  Total & 2663.00 & 100.0\% \\ 
+   \bottomrule
+\end{tabular}
+\end{table}
+:::
+
 
 Seagrass cover is a percentage that ranges from 0 (no seagrass) to 100 (complete seagrass cover).  @fig-cover_fy_wb shows total cover by financial year throughout the Bay. Total cover tends to be highest near the eastern shoreline of the Bay and lowest in the middle of the Bay. Note that 2022-2023 contained the fewest number of samples, lacking significant samples in the Great Sandy Strait compared to the other years.
 
-```{r}
-#| fig-width: 10
-#| fig-height: 6
-#| label: fig-cover_fy_wb
-#| fig-cap: "Total seagrass cover in Wide Bay by financial year."
-dat1  <- dat %>%
-  arrange(total.cover, fy)
-ggplot(dat1) +
-  geom_sf(data = bay, fill = "white") +
-  geom_sf(data = dat1, aes(color = total.cover), size = 0.8) +
-  scale_color_viridis_c(name = "Cover") +
-  scale_x_continuous(breaks = c(152.1, 152.7, 153.3)) +
-  facet_wrap(~ fy) +
-  theme_bw(base_size = 14) +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
-```
+
+::: {.cell}
+::: {.cell-output-display}
+![Total seagrass cover in Wide Bay by financial year.](WBreport_files/figure-pdf/fig-cover_fy_wb-1.pdf){#fig-cover_fy_wb}
+:::
+:::
+
 
 EcoFutures Consulting used eReefs data [@steven2019ereefs] to generate a broad suite of ambient and flood-related turbidity, salinity, and temperature variables at biologically and ecologically relevant temporal windows (@tbl-wq_vars_wb). Ambient water quality variables were based on the mean, minimum, and maximum values for three periods: 7, 30, and 90 days prior to sampling. Ambient variables were also calculated representing the frequency of days water quality thresholds were exceeded (above or below) and the maximum spell (i.e., duration) of days those thresholds were continuously exceeded during the time periods. Similar water quality variables representing flood-event conditions were also calculated for the two separate 30-day flood periods. 
 
-```{r}
-#| label: tbl-wq_vars_wb
-#| tbl-cap: "Wide Bay water quality variables considered in the exploratory analyses, including the variable name and measurement unit (in parentheses), the type of water-quality variable (Ambient, Flood), the time period in days, statistic calculated, and the threshold value used (if any)."
-#| results: asis
-turb_vars <- tibble(
-  Variable = rep("Turbidity (NTU)", 20),
-  Type = c(rep("Ambient", 12), rep("Flood", 8)),
-  Period = c(rep(c("7", "30", "90"), times = 4), rep("30", 8)),
-  Statistic = c(rep("Mean", 3), rep("Frequency", 9), rep("Frequency", 3), rep("Duration", 3), c("Mean", "Max")),
-  Threshold = c(rep("", 3), rep(c("> 3", "> 5", "> 6"), each = 3), rep(c("> 3", "> 5", "> 6"), times = 2), 
-             rep("", 2))
-)
 
-sal_vars <- tibble(
-  Variable = rep("Salinity (PSU)", 17),
-  Type = c(rep("Ambient", 9), rep("Flood", 8)),
-  Period = c(rep(c("7", "30", "90"), times = 3), rep("30", 8)),
-  Statistic = c(rep("Frequency", 9), rep("Frequency", 3), rep("Duration", 3), c("Mean", "Min")),
-  Threshold = c(rep(c("< 20", "< 25", "< 30"), each = 3), rep(c("< 20", "< 25", "< 30"), times = 2), rep("", 2))
-)
+::: {#tbl-wq_vars_wb .cell tbl-cap='Wide Bay water quality variables considered in the exploratory analyses, including the variable name and measurement unit (in parentheses), the type of water-quality variable (Ambient, Flood), the time period in days, statistic calculated, and the threshold value used (if any).'}
+\begin{table}[ht]
+\centering
+\begin{tabular}{lllll}
+  \toprule
+Variable & Type & Period & Statistic & Threshold \\ 
+  \midrule
+Turbidity (NTU) & Ambient & 30, 7, 90 & Mean &  \\ 
+  Turbidity (NTU) & Ambient & 30, 7, 90 & Frequency & $>$ 3 \\ 
+  Turbidity (NTU) & Ambient & 30, 7, 90 & Frequency & $>$ 5 \\ 
+  Turbidity (NTU) & Ambient & 30, 7, 90 & Frequency & $>$ 6 \\ 
+  Salinity (PSU) & Ambient & 30, 7, 90 & Frequency & $<$ 20 \\ 
+  Salinity (PSU) & Ambient & 30, 7, 90 & Frequency & $<$ 25 \\ 
+  Salinity (PSU) & Ambient & 30, 7, 90 & Frequency & $<$ 30 \\ 
+  Temperature (deg C) & Ambient & 30, 7, 90 & Mean &  \\ 
+  Turbidity (NTU) & Flood & 30 & Mean &  \\ 
+  Turbidity (NTU) & Flood & 30 & Max &  \\ 
+  Turbidity (NTU) & Flood & 30 & Frequency & $>$ 3 \\ 
+  Turbidity (NTU) & Flood & 30 & Frequency & $>$ 5 \\ 
+  Turbidity (NTU) & Flood & 30 & Frequency & $>$ 6 \\ 
+  Turbidity (NTU) & Flood & 30 & Duration & $>$ 3 \\ 
+  Turbidity (NTU) & Flood & 30 & Duration & $>$ 5 \\ 
+  Turbidity (NTU) & Flood & 30 & Duration & $>$ 6 \\ 
+  Salinity (PSU) & Flood & 30 & Min &  \\ 
+  Salinity (PSU) & Flood & 30 & Mean &  \\ 
+  Salinity (PSU) & Flood & 30 & Frequency & $<$ 20 \\ 
+  Salinity (PSU) & Flood & 30 & Frequency & $<$ 25 \\ 
+  Salinity (PSU) & Flood & 30 & Frequency & $<$ 30 \\ 
+  Salinity (PSU) & Flood & 30 & Duration & $<$ 20 \\ 
+  Salinity (PSU) & Flood & 30 & Duration & $<$ 25 \\ 
+  Salinity (PSU) & Flood & 30 & Duration & $<$ 30 \\ 
+   \bottomrule
+\end{tabular}
+\end{table}
+:::
 
-temp_vars <- tibble(
-  Variable = rep("Temperature (deg C)", 3),
-  Type = c(rep("Ambient", 3)),
-  Period = c(rep(c("7", "30", "90"), times = 1)),
-  Statistic = c(rep("Mean", 3)),
-  Threshold = c(rep("", 3))
-)
-
-wq_vars <- bind_rows(turb_vars, sal_vars, temp_vars) %>%
-  group_by(Variable, Type, Statistic, Threshold) %>%
-  summarise(Period = paste(sort(unique(Period)), collapse = ", "),
-            .groups = "drop") %>%
-  mutate(
-    Variable = factor(Variable, levels = c("Turbidity (NTU)", "Salinity (PSU)", "Temperature (deg C)")),
-    Type = factor(Type, levels = c("Ambient", "Flood")),
-    Statistic = factor(Statistic, levels = c("Min", "Mean", "Max", "Frequency", "Duration"))
-  ) %>%
-  arrange(Type, Variable, Statistic) %>%
-  select(Variable, Type, Period, Statistic, Threshold)
-
-wq_vars %>%
-  xtable() %>%
-  print(include.rownames = FALSE, floating = TRUE, booktabs = TRUE, comment = FALSE)
-```
 
 
 Additional covariates were also provided by EcoFutures Consulting, which are used to represent geographic features, depth, and algae cover, as well as the years since the floods and the seagrass growing season. These variables have the following structure:
@@ -172,19 +144,13 @@ Additional covariates were also provided by EcoFutures Consulting, which are use
 * Zone class has six categorical levels: Central, East, Great Sandy Strait, Hervey Bay, Southern, and Southwest (@fig-zone_class). 
 
 
-```{r}
-#| fig-width: 8
-#| fig-height: 8
-#| label: fig-zone_class
-#| fig-cap: "Observations and their zone classes in Wide Bay."
-ggplot(dat) +
-  geom_sf(data = bay, fill = "white") +
-  geom_sf(data = dat, aes(color = zone.class), size = 0.5) +
-  scale_color_discrete(name = "Zone Class") +
-  scale_x_continuous(breaks = c(152.1, 152.7, 153.3)) +
-  theme_bw(base_size = 14) +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
-```
+
+::: {.cell}
+::: {.cell-output-display}
+![Observations and their zone classes in Wide Bay.](WBreport_files/figure-pdf/fig-zone_class-1.pdf){#fig-zone_class}
+:::
+:::
+
 
 ## Exploratory Analyses
 
@@ -201,84 +167,94 @@ We considered multiple modeling approaches in this study, which each accounted f
 There were several reasons for fitting these initial models. The nonspatial linear model provided a useful baseline to compare the spatial linear model against, elucidating the impact of spatial dependence on model fit. The spatial beta regression model is a generalized linear model used to characterize proportion data ranging between zero and one. To adhere to this restriction, total seagrass cover was 1) scaled from a percentage to a proportion and 2) if exactly zero or one, set to 0.01 or 0.99, respectively. The spatial gamma regression model is a generalized linear model used to characterize skewed positive data. To adhere to this restriction, a value of 0.01 was added to seagrass cover observations that were equal to zero. Finally, the random forest model provided a useful assessment of a machine learning approach, which requires fewer distributional assumptions than the aforementioned statistical approaches and more naturally describes nonlinear relationships between variables (Appendix 1). We also characterized random forest effects using partial dependence plots [@greenwell2017pdp], which isolate the marginal contribution of a variable while holding other variables at their observed values. Out-of-sample predictions were generated for the four statistical models using leave-one-out cross validation, while out-of-bag validation was used for the random forest model. These out-of-sample predictions were then used to calculate the mean bias (MBias) and root-mean-square-prediction error (RMSPE) for each model. 
 
 
-```{r}
-wb_tc_lm_loocv <- readRDS(here("models", "wb_tc_lm_loocv.rds"))
-wb_tc_splm_loocv <- readRDS(here("models", "wb_tc_splm_loocv.rds"))
-wb_tc_spglm_beta_loocv <- readRDS(here("models", "wb_tc_spglm_beta_loocv.rds")) * 100 # to undo scaling
-wb_tc_spglm_gamma_loocv <- readRDS(here("models", "wb_tc_spglm_gamma_loocv.rds"))
-wb_tc_lm_loocv <- readRDS(here("models", "wb_tc_lm_loocv.rds"))
-wb_tc_rf_oob <- readRDS(here("models", "wb_tc_rf_oob.rds"))
-wb_cv <- bind_rows(wb_tc_lm_loocv, wb_tc_splm_loocv, wb_tc_spglm_beta_loocv,
-                   wb_tc_spglm_gamma_loocv, wb_tc_rf_oob)
-```
+
+::: {.cell}
+
+:::
+
 
 The results of this initial model comparison showed that the random forest had the lowest RMSPE, followed by the spatial linear model, generalized linear models, and the nonspatial linear model (@tbl-wb_cv). The nonspatial and spatial linear models also had considerably lower mean bias values than the random forest model, while the two generalized linear models produced unacceptably biased predictions. Overall, all five approaches generally identified similar relationships between seagrass cover and the covariates, in the directions expected (when there were significant effects). There were some minor differences in the effect of turbidity among the modeling approaches, which we briefly note later. Random forest partial dependence plots [@greenwell2017pdp] suggested that linear effects of the model variables were generally reasonable. Given these results and the ease of interpretability of the spatial linear model, we chose to use a spatial linear modeling framework for the Wide Bay seagrass cover model.
 
-```{r}
-#| label: tbl-wb_cv
-#| tbl-cap: "Wide Bay out of sample prediction metrics for the various approaches. Mean bias (MBias) tended to be small relative to root-mean-squared-prediction error (RMSPE). For LM, SPLM, SPGLM-Beta, SPGLM-Gamma, leave-one-out cross validation was used. For RF, out of bag validation was used."
-#| results: asis
-wb_cv %>%
-  mutate(approach = c("Linear Model", "Spatial Linear Model", "Spatial GLM - Beta", "Spatial GLM - Gamma", "Random Forest")) %>%
-  select(approach, bias, RMSPE) %>%
-  arrange(RMSPE) %>%
-  rename(Approach = approach, MBias = bias) %>%
-  xtable(digits = 3) %>%
-  print(include.rownames = FALSE, floating = TRUE, booktabs = TRUE, comment = FALSE)
-```
 
-```{r}
-#| label: fig-rf_temp
-#| fig-cap: "Random forest partial dependence for total seagrass percent cover as a function of 90 day mean temperature."
-#| out-width: "50%"
-wb_tc_rf_mod <- readRDS(file = here("models", "wb_tc_rf_mod.rds"))
-pred.grid <- tibble(temp.90d.mn = seq(20, 27, length.out = 5))
-pd <- partial(wb_tc_rf_mod, pred.var = "temp.90d.mn", pred.grid = pred.grid) 
-ggplot(pd, aes(x = temp.90d.mn, y = yhat)) +
-  geom_line(linewidth = 2) +
-  labs(x = "90 Day Mean Temperature", y = "Seagrass Cover") +
-  theme_bw(base_size = 14)
-```
+::: {#tbl-wb_cv .cell tbl-cap='Wide Bay out of sample prediction metrics for the various approaches. Mean bias (MBias) tended to be small relative to root-mean-squared-prediction error (RMSPE). For LM, SPLM, SPGLM-Beta, SPGLM-Gamma, leave-one-out cross validation was used. For RF, out of bag validation was used.'}
+\begin{table}[ht]
+\centering
+\begin{tabular}{lrr}
+  \toprule
+Approach & MBias & RMSPE \\ 
+  \midrule
+Random Forest & -0.029 & 4.537 \\ 
+  Spatial Linear Model & -0.003 & 4.700 \\ 
+  Spatial GLM - Gamma & 1.177 & 5.116 \\ 
+  Spatial GLM - Beta & -0.159 & 5.306 \\ 
+  Linear Model & -0.000 & 5.452 \\ 
+   \bottomrule
+\end{tabular}
+\end{table}
+:::
+
+
+
+::: {.cell}
+::: {.cell-output-display}
+![Random forest partial dependence for total seagrass percent cover as a function of 90 day mean temperature.](WBreport_files/figure-pdf/fig-rf_temp-1.pdf){#fig-rf_temp width=50%}
+:::
+:::
+
 
 A suite of spatial linear models (Appendix 1, @eq-splm1), with exponential spatial covariance functions and a random effect for zone class, were fit using the `splm()` function in `spmodel` @dumelle2023spmodel. Parameters were estimated using restricted maximum likelihood. Parameters were estimated using restricted maximum likelihood and models primarily compared model using leave-one-out cross validation fit statistics; though AIC or BIC could also be used if parameters were estimated using maximum likelihood. In addition, the relationships between seagrass cover and covariates needed to be plausible. 
 
 The final total seagrass cover model for Wide Bay included the following covariates: tidal range, sediment type, 90-day mean temperature (prior to sampling), 90 day turbidity (prior to sampling), and mean turbidity during flood period one scaled by time since the flood squared (@tbl-wb_tc_splm_vars). Mean turbidity during flood period one was scaled so that its effect decays with time since the flood. Intuitively, this means that as the time since flood one increases, the impact of turbidity during the flood event decreases. We also considered scaling by time since flood one (not squared), which produced similar results. This modeling approach is similar to the Moreton Bay modeling approach [@dumelle2026moreton], as similar research questions were asked for each region.
 
-```{r}
-#| label: tbl-wb_tc_splm_vars
-#| tbl-cap: "Covariates in the final Wide Bay seagrass cover model, their type (numeric or categorical), and if categorical, the number of unique levels."
-#| results: asis
-wb_tc_splm_vars <- tibble(
-  Variable = c("90 Day Temperature", "90 Day Turbidity", "Mean Flood Turbidity/Years Since Flood One^2", "Sediment Type", "Tidal Range"), 
-  Type = c(rep("Numeric", 3), rep("Categorical", 2)),
-  `No. Levels` = c(rep("NA", 3), "5", "3")
-)
-wb_tc_splm_vars %>%
-  xtable() %>%
-  print(include.rownames = FALSE, floating = TRUE, booktabs = TRUE, comment = FALSE)
-```
+
+::: {#tbl-wb_tc_splm_vars .cell tbl-cap='Covariates in the final Wide Bay seagrass cover model, their type (numeric or categorical), and if categorical, the number of unique levels.'}
+\begin{table}[ht]
+\centering
+\begin{tabular}{lll}
+  \toprule
+Variable & Type & No. Levels \\ 
+  \midrule
+90 Day Temperature & Numeric & NA \\ 
+  90 Day Turbidity & Numeric & NA \\ 
+  Mean Flood Turbidity/Years Since Flood One\verb|^|2 & Numeric & NA \\ 
+  Sediment Type & Categorical & 5 \\ 
+  Tidal Range & Categorical & 3 \\ 
+   \bottomrule
+\end{tabular}
+\end{table}
+:::
 
 
-```{r}
-# wide bay tc model
-wb_tc_splm_mod <- readRDS(here("models", "wb_tc_splm_mod.rds"))
-```
 
-```{r}
-#| label: tbl-wb-fixed
-#| tbl-cap: "Fixed effects table of covariates in the Wide Bay water quality and geographic model."
-#| results: asis
-wb_tc_splm_mod %>%
-  tidy() %>%
-  mutate(term = c("Intercept (Mud/Deep Subtidal)",  "Intertidal", "Shallow Subtidal", 
-                  "Muddy Sand", "Rock", "Sand", "Sandy Mud",
-                     "90 Day Temperature",
-                     "90 Day Turbidity", "Mean Flood Turbidity/Years Since Flood One^2")) %>%
-  select(-std.error) %>%
-  rename(Term = term, Estimate = estimate, z = statistic, p.value = p.value) %>%
-  xtable(digits = 3) %>%
-  print(include.rownames = FALSE, floating = TRUE, booktabs = TRUE, comment = FALSE)
-```
+
+::: {.cell}
+
+:::
+
+
+
+::: {#tbl-wb-fixed .cell tbl-cap='Fixed effects table of covariates in the Wide Bay water quality and geographic model.'}
+\begin{table}[ht]
+\centering
+\begin{tabular}{lrrr}
+  \toprule
+Term & Estimate & z & p.value \\ 
+  \midrule
+Intercept (Mud/Deep Subtidal) & 14.405 & 5.111 & 0.000 \\ 
+  Intertidal & 0.419 & 0.969 & 0.333 \\ 
+  Shallow Subtidal & 1.652 & 1.955 & 0.051 \\ 
+  Muddy Sand & -1.060 & -1.822 & 0.068 \\ 
+  Rock & -1.264 & -1.282 & 0.200 \\ 
+  Sand & -0.685 & -1.195 & 0.232 \\ 
+  Sandy Mud & -1.492 & -2.700 & 0.007 \\ 
+  90 Day Temperature & -0.502 & -7.411 & 0.000 \\ 
+  90 Day Turbidity & 0.844 & 1.371 & 0.170 \\ 
+  Mean Flood Turbidity/Years Since Flood One\verb|^|2 & -0.000 & -0.050 & 0.960 \\ 
+   \bottomrule
+\end{tabular}
+\end{table}
+:::
+
 
 
 @tbl-wb-fixed shows the fixed effects table from the fitted model. The reference group is the muddy and deep subtidal group, and the remaining sediment type and tidal range terms represent deviations from these baselines. For the numeric variables, temperature had a small $p$-value ($p$-value $<$ 0.01) while the turbidity metrics had large $p$-values ($p$-values > 0.1). While we can assess the overall significance of the numeric variables @tbl-wb-fixed, we must perform an analysis of variance (ANOVA) to assess the overall significance of variables with many levels. @tbl-wb-covariates shows these ANOVA results for the sediment type and tidal range variables; sediment type had a small $p$-value ($p$-value $<$ 0.01) while tidal range had a larger $p$-value ($p$-value > 0.1). Together, these results indicate sediment type and temperature had significant effects on seagrass cover, while there was not substantial evidence the other variables did, at least in these data. Here are some relevant takeaways from the model fit for the sediment type and temperature variables:
@@ -286,68 +262,50 @@ wb_tc_splm_mod %>%
 * Sediment Type: The estimated (marginal) average seagrass cover is largest in mud (4.3%), followed by sand (3.6%), muddy sand (3.2%), rock (3.0%), and sandy mud (2.8%). 
 * 90 Day Temperature: A one-degree (C) increase in 90 day temperature is associated with a decrease in average total cover by 0.5% points.
 
-```{r}
-#| label: tbl-wb-covariates
-#| tbl-cap: "ANOVA table of covariates for the categorical variables in the Wide Bay water quality and geographic model."
-#| results: asis
-wb_tc_splm_mod %>%
-  anova() %>%
-  tidy() %>%
-  filter(effects != "(Intercept)") %>%
-  mutate(effects = c("Tidal Range", "Sediment Type", "90 Day Temperature", "Mean Flood Turbidity/Years Since Flood One^2", "90 Day Turbidity")) %>%
-  arrange(desc(statistic)) %>%
-  filter(effects %in% c("Tidal Range", "Sediment Type")) %>%
-rename(Effects = effects, df = df, `Chi-sq` = statistic, p.value = p.value) %>%
-  xtable(digits = 3) %>%
-  print(include.rownames = FALSE, floating = TRUE, booktabs = TRUE, comment = FALSE)
-```
 
-```{r}
-#| label: fig-wb_temp_90d
-#| fig-cap: "Average total cover as a function of 90 day mean temperature. Estimates (and confidence intervals) were evaluated at the means of all other numeric variables, and for the intertidal range and Sand sediment types."
-#| out-width: "50%"
-pred_grid <- tibble(
-  depth.range = "Intertidal",
-  sed.type = "Sand",
-  temp.90d.mn = mean(dat$temp.90d.mn),
-  turb.90d.mn = mean(dat$turb.90d.mn),
-  turb.fld.mn = mean(dat$turb.fld.mn),
-  yr.flood1.recip2 = mean(dat$yr.flood1.recip2),
-  xc = 150000, yc = 275000
-) %>% 
-  st_as_sf(crs = 3113, coords = c("xc", "yc"))
+::: {#tbl-wb-covariates .cell tbl-cap='ANOVA table of covariates for the categorical variables in the Wide Bay water quality and geographic model.'}
+\begin{table}[ht]
+\centering
+\begin{tabular}{lrrr}
+  \toprule
+Effects & df & Chi-sq & p.value \\ 
+  \midrule
+Sediment Type &    4 & 16.638 & 0.002 \\ 
+  Tidal Range &    2 & 3.870 & 0.144 \\ 
+   \bottomrule
+\end{tabular}
+\end{table}
+:::
 
-n_grid <- 200
 
-pred_grid_temp.90d.mn <- pred_grid[rep(1, n_grid), ]
-pred_grid_temp.90d.mn$temp.90d.mn <- seq(20, 27, length.out = n_grid)
-pred_grid_temp.90d.mn[, c("fit", "lwr", "upr")] <- predict(wb_tc_splm_mod, newdata = pred_grid_temp.90d.mn, local = TRUE, interval = "confidence")
 
-p1 <- ggplot(pred_grid_temp.90d.mn, aes(x = temp.90d.mn)) +
-  geom_line(aes(y = fit)) +
-  geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = 0.4, fill = "grey") +
-  labs(x = "Temperature (90 Day)", y = "Average Total Cover") +
-  theme_bw(base_size = 14)
+::: {.cell}
+::: {.cell-output-display}
+![Average total cover as a function of 90 day mean temperature. Estimates (and confidence intervals) were evaluated at the means of all other numeric variables, and for the intertidal range and Sand sediment types.](WBreport_files/figure-pdf/fig-wb_temp_90d-1.pdf){#fig-wb_temp_90d width=50%}
+:::
+:::
 
-p1
-```
 
 We examined model diagnostics to better understand the overall model fit. First, we partitioned the model into different components of variability (@tbl-wb_varcomp) and found that 5.4% is attributable to the covariates (a quantity sometimes referred to as the Pseudo R-squared), 54.2% to the spatial random error, 5.8% to the zone class, and the remaining variability is independent random error. Second, we examined the decay behaviour of spatial autocorrelation. The estimated exponential spatial range ($\phi$) is 14757 meters, which suggests two total cover observations are approximately (spatially) uncorrelated at a distance of $3\phi \approx 45$km, or forty-five kilometers. Third, we analyzed the standardized model residuals, which have been decorrelated, to assess model assumptions and identify influential observations that had a sizable impact on model fit. Generally, the standardized residuals are centered around zero, though there is a slight right skew suggesting some observed total cover values are larger than expected (according to the model). Observations are referred to as "influential" if they highly influence model fit. Influence is often assessed using a Cook's distance threshold value of one [@cook1982residuals]. No observations exceed this threshold.
 
 
-```{r}
-#| label: tbl-wb_varcomp
-#| tbl-cap: "Variance components in the Wide Bay seagrass model."
-#| results: asis
-wb_tc_splm_mod %>%
-  varcomp() %>%
-  mutate(varcomp = c("Covariates", "Spatial Effect", "Independent Error", "Zone Class")) %>%
-  adorn_pct_formatting() %>%
-  mutate(val = c(NA, coef(wb_tc_splm_mod, type = "spcov")[1:3])) %>%
-  rename(`Variance Component` = varcomp, `Percent (of Total Variability)` = proportion, `Parameter Value` = val) %>%
-  xtable(digits = 1) %>%
-  print(include.rownames = FALSE, floating = TRUE, booktabs = TRUE, comment = FALSE)
-```
+
+::: {#tbl-wb_varcomp .cell tbl-cap='Variance components in the Wide Bay seagrass model.'}
+\begin{table}[ht]
+\centering
+\begin{tabular}{llr}
+  \toprule
+Variance Component & Percent (of Total Variability) & Parameter Value \\ 
+  \midrule
+Covariates & 5.4\% &  \\ 
+  Spatial Effect & 54.2\% & 28.8 \\ 
+  Independent Error & 34.6\% & 18.4 \\ 
+  Zone Class & 5.8\% & 14757.0 \\ 
+   \bottomrule
+\end{tabular}
+\end{table}
+:::
+
 
 All five modeling approaches found significant relationships between sediment type and temperature.  The nonspatial linear model and spatial beta regression model found significant, negative relationships between turbidity and total cover overall, while the random forest ranked turbidity as important metrics. All but the spatial linear model and random forest found significant relationships among tidal ranges, with intertidal or deep subtidal having the lowest average total cover. For the random forest, tidal range was the least important variable.
 
@@ -358,64 +316,37 @@ A tremendous benefit of using the spatial linear model is that block Kriging [@v
 @fig-bk_wb_class, @fig-bk_wb_zone, and @fig-bk_wb_tidal show that seagrass cover has generally improved since 2021-2022 across all zone classes, conservation zones, and tidal ranges. Although there were notable declines observed in Marine National Park Zones between 2022-2023 and 2023-2024 (@fig-bk_wb_zone).
 When we examine recovery for the whole of Wide Bay (@fig-bk_wb_all), the model suggests that seagrass cover has improved since 2021-2022, but the same declines are observed between 2022-2023 and 2023-2024. 
 
-```{r}
-#| fig-width: 8
-#| fig-height: 10
-#| label: fig-bk_wb_class
-#| fig-cap: "Average seagrass cover predictions by zone class. Red dots indicate the mean from the raw data. Black dots indicate the predicted mean in the region alongside a prediction interval."
-bk_wb_class <- readRDS(here("models", "bk_wb_class.rds"))
-ggplot(bk_wb_class, aes(x = fy, y = fit)) +
-  geom_point() +
-  geom_errorbar(aes(ymin = lwr, ymax = upr), width = 0.3) +
-  geom_point(aes(x = fy, y = raw_mean), color = "red") +
-  facet_wrap(~ zone.class, ncol = 2) +
-  labs(x = "Financial Year", y = "Predicted Mean Seagrass Cover") +
-  theme_bw(base_size = 12)
-```
 
-```{r}
-#| fig-width: 8
-#| fig-height: 10
-#| label: fig-bk_wb_zone
-#| fig-cap: "Average seagrass cover predictions by conservation zone. Red dots indicate the mean from the raw data. Black dots indicate the predicted mean in the region alongside a prediction interval."
-bk_wb_zone <- readRDS(here("models", "bk_wb_zone.rds"))
-ggplot(bk_wb_zone, aes(x = fy, y = fit)) +
-  geom_point() +
-  geom_errorbar(aes(ymin = lwr, ymax = upr), width = 0.3) +
-  geom_point(aes(x = fy, y = raw_mean), color = "red") +
-  facet_wrap(~ zone.type, ncol = 2) +
-  labs(x = "Financial Year", y = "Predicted Mean Seagrass Cover") +
-  theme_bw(base_size = 12)
-```
+::: {.cell}
+::: {.cell-output-display}
+![Average seagrass cover predictions by zone class. Red dots indicate the mean from the raw data. Black dots indicate the predicted mean in the region alongside a prediction interval.](WBreport_files/figure-pdf/fig-bk_wb_class-1.pdf){#fig-bk_wb_class}
+:::
+:::
 
-```{r}
-#| fig-width: 8
-#| fig-height: 6
-#| label: fig-bk_wb_tidal
-#| fig-cap: "Average seagrass cover predictions by tidal range. Red dots indicate the mean from the raw data. Black dots indicate the predicted mean in the region alongside a prediction interval."
-bk_wb_tidal <- readRDS(here("models", "bk_wb_tidal.rds"))
-ggplot(bk_wb_tidal, aes(x = fy, y = fit)) +
-  geom_point() +
-  geom_errorbar(aes(ymin = lwr, ymax = upr), width = 0.3) +
-  geom_point(aes(x = fy, y = raw_mean), color = "red") +
-  facet_wrap(~ depth.range, ncol = 2) +
-  labs(x = "Financial Year", y = "Predicted Mean Seagrass Cover") +
-  theme_bw(base_size = 12)
-```
 
-```{r}
-#| fig-width: 4
-#| fig-height: 3
-#| label: fig-bk_wb_all
-#| fig-cap: "Average seagrass cover predictions in Wide Bay. Red dots indicate the mean from the raw data. Black dots indicate the predicted mean in the region alongside a prediction interval."
-bk_wb_all <- readRDS(here("models", "bk_wb_all.rds"))
-ggplot(bk_wb_all, aes(x = fy, y = fit)) +
-  geom_point() +
-  geom_errorbar(aes(ymin = lwr, ymax = upr), width = 0.3) +
-  geom_point(aes(x = fy, y = raw_mean), color = "red") +
-  labs(x = "Financial Year", y = "Predicted Mean Seagrass Cover") +
-  theme_bw(base_size = 12)
-```
+
+::: {.cell}
+::: {.cell-output-display}
+![Average seagrass cover predictions by conservation zone. Red dots indicate the mean from the raw data. Black dots indicate the predicted mean in the region alongside a prediction interval.](WBreport_files/figure-pdf/fig-bk_wb_zone-1.pdf){#fig-bk_wb_zone}
+:::
+:::
+
+
+
+::: {.cell}
+::: {.cell-output-display}
+![Average seagrass cover predictions by tidal range. Red dots indicate the mean from the raw data. Black dots indicate the predicted mean in the region alongside a prediction interval.](WBreport_files/figure-pdf/fig-bk_wb_tidal-1.pdf){#fig-bk_wb_tidal}
+:::
+:::
+
+
+
+::: {.cell}
+::: {.cell-output-display}
+![Average seagrass cover predictions in Wide Bay. Red dots indicate the mean from the raw data. Black dots indicate the predicted mean in the region alongside a prediction interval.](WBreport_files/figure-pdf/fig-bk_wb_all-1.pdf){#fig-bk_wb_all}
+:::
+:::
+
 
 \clearpage
 
@@ -444,109 +375,110 @@ We used the raw seagrass model residuals (@fig-resid_fy_wb) as a the response va
 
 We expected there to be nonlinear relationships between the response and covariates and we accounted for them using B-spline basis functions [@deboor1978practical; @eilers1996flexible]. The degree of these functions was informed by partial dependence plots derived from a random forest model fitted to the seagrass model residuals (@tbl-res_vars_wb). We did not use the "Gastropod Habitat Total Area" variable because there was no gastropod habitat overlap in the Wide Bay data.
 
-```{r}
-#| fig-width: 8
-#| fig-height: 6
-#| label: fig-resid_fy_wb
-#| fig-cap: "Seagrass model residuals for resilience analysis in Wide Bay, by financial year."
-dat$residuals <- residuals(wb_tc_splm_mod)
-dat2 <- dat %>%
-  arrange(residuals, fy)
-ggplot(dat2) +
-  geom_sf(data = bay, fill = "white") +
-  geom_sf(data = dat2, aes(color = residuals), size = 0.8) +
-  scale_color_viridis_c(name = "Residuals", option = "H") +
-  scale_x_continuous(breaks = c(152.1, 152.7, 153.3)) +
-  facet_wrap(~ fy) +
-  theme_bw(base_size = 14) +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
-```
 
-```{r}
-#| label: tbl-res_vars_wb
-#| tbl-cap: "Covariates included in the resilience model, including whether they were a fixed or random effect, and the nonlinearity degree of the B-splines basis function."
-#| results: asis
-res_vars <- tibble(
-  Variable = c("Coral Habitat Total Area", "Seagrass Habitat Total Area",
-              "Mangrove Habitat Total Area",
-              "Distance to Coral Habitat", "Distance to Seagrass Habitat",
-              "Distance to Mangrove Habitat", "Distance to Gastropod Habitat",
-              "Species Richness", "Habitat Count", "Dominant Species",
-              "Bathymetry Mean Depth", 
-              #"Bathymetry Mean Curvature", 
-              "Bathymetry Mean Slope",
-              "Zone Class"), 
-  Effect = c(rep("Fixed", 12), "Random"),
-  `Degree` = c(rep(2, 4), 2, 2, 2, 1, 2, "NA", 2, 
-               #2, 
-               2, "NA")
-)
-res_vars %>%
-  xtable() %>%
-  print(include.rownames = FALSE, floating = TRUE, booktabs = TRUE, comment = FALSE)
-```
+::: {.cell}
+::: {.cell-output-display}
+![Seagrass model residuals for resilience analysis in Wide Bay, by financial year.](WBreport_files/figure-pdf/fig-resid_fy_wb-1.pdf){#fig-resid_fy_wb}
+:::
+:::
+
+
+
+::: {#tbl-res_vars_wb .cell tbl-cap='Covariates included in the resilience model, including whether they were a fixed or random effect, and the nonlinearity degree of the B-splines basis function.'}
+\begin{table}[ht]
+\centering
+\begin{tabular}{lll}
+  \toprule
+Variable & Effect & Degree \\ 
+  \midrule
+Coral Habitat Total Area & Fixed & 2 \\ 
+  Seagrass Habitat Total Area & Fixed & 2 \\ 
+  Mangrove Habitat Total Area & Fixed & 2 \\ 
+  Distance to Coral Habitat & Fixed & 2 \\ 
+  Distance to Seagrass Habitat & Fixed & 2 \\ 
+  Distance to Mangrove Habitat & Fixed & 2 \\ 
+  Distance to Gastropod Habitat & Fixed & 2 \\ 
+  Species Richness & Fixed & 1 \\ 
+  Habitat Count & Fixed & 2 \\ 
+  Dominant Species & Fixed & NA \\ 
+  Bathymetry Mean Depth & Fixed & 2 \\ 
+  Bathymetry Mean Slope & Fixed & 2 \\ 
+  Zone Class & Random & NA \\ 
+   \bottomrule
+\end{tabular}
+\end{table}
+:::
+
 
 
 ## Statistical Modeling
 
-```{r}
-#| label: tbl-wb-res-fixed
-#| tbl-cap: "Fixed effects table of covariates in the Wide Bay resilience model."
-#| results: asis
-wb_tc_splm_mod_res <- readRDS(here("models", "wb_tc_splm_mod_res.rds"))
-wb_tc_splm_mod_res %>%
-  tidy() %>% 
-  mutate(term = c("Intercept (Absent)","HD", "HO", "HS", "ZMHU",
-                  "Species Richness", 
-                  "Coral Area Deg1", 
-                  "Coral Area Deg2",
-                  "Seagrass Area Deg1", "Seagrass Area Deg2", 
-                  "Mangrove Area Deg1", "Mangrove Area Deg2",
-                  "Habitat Count Deg1", "Habitat Count Deg2", 
-                  "Coral Distance Deg1", "Coral Distance Deg2", 
-                  "Seagrass Distance Deg1", "Seagrass Distance Deg2",
-                  "Mangrove Distance Deg1", "Mangrove Distance Deg2",
-                  "Gastropod Distance Deg1", "Gastropod Distance Deg2",
-                  "Bathymetry Mean Depth Deg1", "Bathymetry Mean Depth Deg2",
-                  "Bathymetry Mean Slope Deg1", "Bathymetry Mean Slope Deg2"
-                  #"Bathymetry Mean Curvature Deg1", "Bathymetry Mean Curvature Deg2"
-                  )) %>%
-  select(-std.error) %>%
-  rename(Term = term, Estimate = estimate, z = statistic, p.value = p.value) %>%
-  xtable(digits = 3) %>%
-  print(include.rownames = FALSE, floating = TRUE, booktabs = TRUE, comment = FALSE)
-```
+
+::: {#tbl-wb-res-fixed .cell tbl-cap='Fixed effects table of covariates in the Wide Bay resilience model.'}
+\begin{table}[ht]
+\centering
+\begin{tabular}{lrrr}
+  \toprule
+Term & Estimate & z & p.value \\ 
+  \midrule
+Intercept (Absent) & -1.186 & -0.536 & 0.592 \\ 
+  HD & -1.321 & -1.926 & 0.054 \\ 
+  HO & -1.659 & -2.161 & 0.031 \\ 
+  HS & 1.431 & 1.899 & 0.058 \\ 
+  ZMHU & -2.279 & -4.849 & 0.000 \\ 
+  Species Richness & 5.244 & 15.452 & 0.000 \\ 
+  Coral Area Deg1 & 0.750 & 0.303 & 0.762 \\ 
+  Coral Area Deg2 & -0.181 & -0.062 & 0.951 \\ 
+  Seagrass Area Deg1 & -0.766 & -0.997 & 0.319 \\ 
+  Seagrass Area Deg2 & 0.402 & 0.766 & 0.444 \\ 
+  Mangrove Area Deg1 & 0.926 & 0.475 & 0.635 \\ 
+  Mangrove Area Deg2 & -2.933 & -1.052 & 0.293 \\ 
+  Habitat Count Deg1 & -0.147 & -0.167 & 0.867 \\ 
+  Habitat Count Deg2 & -0.093 & -0.112 & 0.911 \\ 
+  Coral Distance Deg1 & -5.110 & -4.151 & 0.000 \\ 
+  Coral Distance Deg2 & 11.500 & 7.084 & 0.000 \\ 
+  Seagrass Distance Deg1 & -1.023 & -0.499 & 0.618 \\ 
+  Seagrass Distance Deg2 & -0.917 & -0.437 & 0.662 \\ 
+  Mangrove Distance Deg1 & 1.543 & 0.898 & 0.369 \\ 
+  Mangrove Distance Deg2 & -2.186 & -1.287 & 0.198 \\ 
+  Gastropod Distance Deg1 & -1.909 & -0.926 & 0.354 \\ 
+  Gastropod Distance Deg2 & -2.665 & -1.776 & 0.076 \\ 
+  Bathymetry Mean Depth Deg1 & 1.509 & 0.628 & 0.530 \\ 
+  Bathymetry Mean Depth Deg2 & 1.215 & 0.636 & 0.525 \\ 
+  Bathymetry Mean Slope Deg1 & -1.246 & -0.835 & 0.404 \\ 
+  Bathymetry Mean Slope Deg2 & 0.945 & 0.347 & 0.729 \\ 
+   \bottomrule
+\end{tabular}
+\end{table}
+:::
+
 
 @tbl-wb-res-fixed shows the fixed effects table from the fitted model. The reference group is the absent dominant species, and the remaining dominant species terms represent deviations from this baseline. Species richness, the only numeric variable with a single level, had a large test statistic and small $p$-value ($p$-value $<$ 0.01). The other numeric variables were modeled using a B-spline basis of degree two to capture nonlinearities. While we can assess the overall significance of species richness in @tbl-wb-res-fixed, we must perform an analysis of variance (ANOVA) to assess the overall significance the remaining variables with multiple terms. @tbl-wb-res-anova shows these ANOVA results.
 
-```{r}
-#| label: tbl-wb-res-anova
-#| tbl-cap: "ANOVA table of covariates in the Wide Bay resilience model."
-#| results: asis
-wb_tc_splm_mod_res <- readRDS(here("models", "wb_tc_splm_mod_res.rds"))
-wb_tc_splm_mod_res %>%
-  anova() %>%
-  tidy() %>%
-  filter(effects != "(Intercept)") %>%
-  arrange(p.value) %>%
-  mutate(effects = c("Species Richness", 
-                     "Dominant Species", 
-                     "Distance to Coral Habitat", 
-                     "Distance to Gastropod Habitat", 
-                     "Distance to Mangrove Habitat",
-                     "Seagrass Habitat Total Area", 
-                     "Mangrove Habitat Total Area",
-                     "Bathymetry Mean Slope", 
-                     "Distance to Seagrass Habitat",
-                     "Bathymetry Mean Depth", 
-                     #"Bathymetry Mean Curvature", 
-                     "Coral Habitat Total Area",
-                     "Habitat Count")) %>%
-  filter(!effects %in% c("Species Richness")) %>%
-  rename(Effects = effects, df = df, `Chi-sq` = statistic, p.value = p.value) %>%
-  xtable(digits = 3) %>%
-  print(include.rownames = FALSE, floating = TRUE, booktabs = TRUE, comment = FALSE)
-```
+
+::: {#tbl-wb-res-anova .cell tbl-cap='ANOVA table of covariates in the Wide Bay resilience model.'}
+\begin{table}[ht]
+\centering
+\begin{tabular}{lrrr}
+  \toprule
+Effects & df & Chi-sq & p.value \\ 
+  \midrule
+Dominant Species &    4 & 68.448 & 0.000 \\ 
+  Distance to Coral Habitat &    2 & 51.856 & 0.000 \\ 
+  Distance to Gastropod Habitat &    2 & 3.196 & 0.202 \\ 
+  Distance to Mangrove Habitat &    2 & 2.913 & 0.233 \\ 
+  Seagrass Habitat Total Area &    2 & 2.834 & 0.242 \\ 
+  Mangrove Habitat Total Area &    2 & 1.161 & 0.560 \\ 
+  Bathymetry Mean Slope &    2 & 0.699 & 0.705 \\ 
+  Distance to Seagrass Habitat &    2 & 0.551 & 0.759 \\ 
+  Bathymetry Mean Depth &    2 & 0.435 & 0.804 \\ 
+  Coral Habitat Total Area &    2 & 0.094 & 0.954 \\ 
+  Habitat Count &    2 & 0.042 & 0.979 \\ 
+   \bottomrule
+\end{tabular}
+\end{table}
+:::
+
 
 We found strong evidence ($p$-value < 0.001) that species richness, dominant species, and distance to coral habitat are associated with resilience: 
 
@@ -557,56 +489,13 @@ We found strong evidence ($p$-value < 0.001) that species richness, dominant spe
 We found little evidence ($p$-value > 0.1) the remaining variables were associated with resilience (after controlling for other modeled variables).
 
 
-```{r}
-#| label: fig-wb_res_rich_coral
-#| fig-cap: "Average species richness (left) and distance to coral habitat (right) effects on resilience. Estimates (and confidence intervals) were evaluated at the means of all other numeric variables and for the ZMHU species in the Central zone."
-#| out-width: "80%"
-pred_grid <- tibble(
-  dom.spp = "ZMHU",
-  sg.rich = mean(dat$sg.rich),
-  coral.msq = mean(dat$coral.msq),
-  seagr.msq = mean(dat$seagr.msq),
-  mang.msq = mean(dat$mang.msq),
-  shell.msq = mean(dat$shell.msq),
-  hab.count = mean(dat$hab.count),
-  coral.dist.m = mean(dat$coral.dist.m),
-  seag.dist.m = mean(dat$seag.dist.m),
-  mang.dist.m = mean(dat$mang.dist.m),
-  shell.dist.m = mean(dat$shell.dist.m),
-  bath.m.mean = mean(dat$bath.m.mean),
-  rslope.dg.mean = mean(dat$rslope.dg.mean),
-  rcurv.dg.mean = mean(dat$rcurv.dg.mean),
-  ehmp.subzone = "Central",
-  xc = 150000, yc = 275000
-) %>% 
-  st_as_sf(crs = 3113, coords = c("xc", "yc"))
 
-n_grid <- 200
+::: {.cell}
+::: {.cell-output-display}
+![Average species richness (left) and distance to coral habitat (right) effects on resilience. Estimates (and confidence intervals) were evaluated at the means of all other numeric variables and for the ZMHU species in the Central zone.](WBreport_files/figure-pdf/fig-wb_res_rich_coral-1.pdf){#fig-wb_res_rich_coral width=80%}
+:::
+:::
 
-pred_grid_sg.rich <- pred_grid[rep(1, n_grid), ]
-pred_grid_sg.rich$sg.rich <- seq(0, 4, length.out = n_grid)
-pred_grid_sg.rich[, c("fit", "lwr", "upr")] <- predict(wb_tc_splm_mod_res, newdata = pred_grid_sg.rich, local = TRUE, interval = "confidence")
-
-pred_grid_coral.dist.m <- pred_grid[rep(1, n_grid), ]
-pred_grid_coral.dist.m$coral.dist.m <- seq(quantile(dat$coral.dist.m, 0.01), quantile(dat$coral.dist.m, 0.99), length.out = n_grid)
-pred_grid_coral.dist.m[, c("fit", "lwr", "upr")] <- predict(wb_tc_splm_mod_res, newdata = pred_grid_coral.dist.m, local = TRUE, interval = "confidence")
-
-p1 <- ggplot(pred_grid_sg.rich, aes(x = sg.rich)) +
-  geom_line(aes(y = fit)) +
-  geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = 0.4, fill = "grey") +
-  labs(x = "Species Richness", y = "Average Resilience") +
-  theme_bw(base_size = 14)
-
-
-p2 <- ggplot(pred_grid_coral.dist.m, aes(x = coral.dist.m)) +
-  geom_line(aes(y = fit)) +
-  geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = 0.4, fill = "grey") +
-  labs(x = "Distance to Coral Habitat", y = "Average Resilience") +
-  theme_bw(base_size = 14) +
-  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
-
-p1 + p2
-```
 
 As mentioned previously, we also fit a random forest model to the seagrass model residuals. There were similarities and differences between the spatial linear model and random forest. Notably, for the random forest:
 
@@ -622,19 +511,13 @@ As mentioned previously, we also fit a random forest model to the seagrass model
 The consistency between the two resilience models' variable importance rankings for species richness, dominant species, bathymetry mean depth, and distance to both gastropod and coral habitats reinforces the spatial linear model's identification of the most important drivers of resilience. However, the random forest identifies distance to mangrove habitat as the second most important variable, which is a questionable finding given the direction of the relationship. This counterintuitive result is likely a spurious correlation or an artifact of the random forest model's inability to account for spatial dependence in the data, which can affect variable importance measures [@fox2020comparing].
 
 
-```{r}
-#| label: fig-rf_coral
-#| fig-cap: "Random forest partial dependence for total cover as a function of distance to coral habitat."
-#| out-width: "50%"
-wb_tc_rf_mod_res <- readRDS(file = here("models", "wb_tc_rf_mod_res.rds"))
-pred.grid <- tibble(coral.dist.m = seq(quantile(dat$coral.dist.m, 0.01), quantile(dat$coral.dist.m, 0.99), length.out = 6))
-pd <- partial(wb_tc_rf_mod_res, pred.var = "coral.dist.m", pred.grid = pred.grid) 
-p1 <- ggplot(pd, aes(x = coral.dist.m, y = yhat)) +
-  geom_line(linewidth = 2) +
-  labs(x = "Distance to Coral Habitat", y = "Total Cover") +
-  theme_bw(base_size = 14)
-p1
-```
+
+::: {.cell}
+::: {.cell-output-display}
+![Random forest partial dependence for total cover as a function of distance to coral habitat.](WBreport_files/figure-pdf/fig-rf_coral-1.pdf){#fig-rf_coral width=50%}
+:::
+:::
+
 
 # Limitations
 
@@ -701,23 +584,13 @@ $$
 $$ {#eq-splm3}
 where $\mathbf{Z}$ is a random effect design matrix (dimension $n \times k$) that indexes each of the $k$ random effects in $\mathbf{u}$. For more information about specific forms of various spatial covariance functions, see @schabenberger2017statistical and @zimmerman2024spatial.
 
-```{r}
-#| label: fig-spcov_fns
-#| fig-cap: "Three spatial covariance functions that represent different spatial dependence behavior."
-#| out-width: "75%"
-range <- 50
-spcor_dat <- tibble(
-  h = seq(0, range*2),
-  Exponential = exp(-h/range),
-  Gaussian = exp(-h^2/range^2),
-  Spherical = (1 - 1.5*h/range + 0.5*h^3/range^3)*(h <= range)
-) %>%
-  rename(Distance = h) %>%
-  pivot_longer(cols = c(-Distance), names_to = "Function", values_to = "Spatial Covariance")
-ggplot(spcor_dat, aes(x = Distance, y = `Spatial Covariance`, color = Function, linetype = Function)) +
-  geom_line(linewidth = 2) +
-  theme_bw(base_size = 14)
-```
+
+::: {.cell}
+::: {.cell-output-display}
+![Three spatial covariance functions that represent different spatial dependence behavior.](WBreport_files/figure-pdf/fig-spcov_fns-1.pdf){#fig-spcov_fns width=75%}
+:::
+:::
+
 
 Like the traditional linear model, the spatial linear model can capture complex nonlinearities in the data through the use of interaction effects [@faraway2002practical; @lenth2025emmeans], splines [@chambers1992statistical; @ruppert2003semiparametric], additive models [@wood2017generalized; @pedersen2019hierarchical], and penalized regression models like the ridge and lasso [@tibshirani1996regression]. Generally, this is accomplished by leveraging _basis functions_ that break down nonlinear behavior into a set of additive linear components that may include penalty terms which guard against overfitting. Furthermore, there is no assumption that $y_i$ itself is normally distributed; rather, distributional assumptions are placed on the random errors after incorporating the slope parameters. This clarification implies the spatial (and nonspatial) linear models can be quite effective at modeling a range of data that are not normally distributed. For highly nonnormal data, tools like generalized linear models, which we discuss later, can be helpful. Finally, under general conditions, the slope parameters of the spatial (and nonspatial) linear models are approximately normally distributed with a large sample size (see @casella2024statistical for a general justification via the Central Limit Theorem and @zhang2005towards for nuances regarding spatial data). This is beneficial because it justifies valid hypothesis testing on the slope coefficients (often of primary ecological interest), no matter the distribution of the data (given certain assumptions are satisfied).
 
@@ -729,76 +602,42 @@ g(\mu_i) = \beta_0 + \beta_1x_{1, i} + \beta_2x_{2, i} + ... + \beta_p x_{p, i} 
 $$ {#eq-spglm1}
 where $g(\mu_i)$ is a "link function" that links the distribution of $y_i$ to a linear function of its mean, $\mu_i$. Common link functions include the log link for count and skewed data and the logit link for binomial and proportion data (@tbl-glm-families). Using the same argument as for spatial linear models, nonspatial random effects can be added to spatial generalized linear models.
 
-```{r}
-#| label: tbl-glm-families
-#| tbl-cap: "Common generalized linear model families, link functions, and appropriate data types."
-#| results: asis
-glm_table <- data.frame(
-  Family = c("Binomial", "Poisson", "Negative Binomial",
-             "Beta", "Gamma", "Inverse Gaussian"),
-  Link_Function = c("$f(\\mu) = \\log(\\mu / (1 - \\mu))$",
-                    "$f(\\mu) = \\log(\\mu)$",
-                    "$f(\\mu) = \\log(\\mu)$",
-                    "$f(\\mu) = \\log(\\mu / (1 - \\mu))$",
-                    "$f(\\mu) = \\log(\\mu)$",
-                    "$f(\\mu) = \\log(\\mu)$"),
-  Link_Name = c("Logit", "Log", "Log", "Logit", "Log", "Log"),
-  Data_Type = c("Binary; Binary Count", "Count", "Count",
-                "Proportion", "Skewed", "Skewed")
-) %>%
-  rename(Family = Family, `Link Function` = Link_Function,
-         `Link Name` = Link_Name, `Data Type` = Data_Type) %>%
-  xtable() %>%
-  print(include.rownames = FALSE, floating = TRUE, booktabs = TRUE, comment = FALSE,
-        sanitize.text.function = identity)
-```
+
+::: {#tbl-glm-families .cell tbl-cap='Common generalized linear model families, link functions, and appropriate data types.'}
+\begin{table}[ht]
+\centering
+\begin{tabular}{llll}
+  \toprule
+Family & Link Function & Link Name & Data Type \\ 
+  \midrule
+Binomial & $f(\mu) = \log(\mu / (1 - \mu))$ & Logit & Binary; Binary Count \\ 
+  Poisson & $f(\mu) = \log(\mu)$ & Log & Count \\ 
+  Negative Binomial & $f(\mu) = \log(\mu)$ & Log & Count \\ 
+  Beta & $f(\mu) = \log(\mu / (1 - \mu))$ & Logit & Proportion \\ 
+  Gamma & $f(\mu) = \log(\mu)$ & Log & Skewed \\ 
+  Inverse Gaussian & $f(\mu) = \log(\mu)$ & Log & Skewed \\ 
+   \bottomrule
+\end{tabular}
+\end{table}
+:::
+
 
 Spatial models are complicated, both theoretically and computationally. This has contributed to their relative underuse in the ecological community. However, recent advances in open-source software have made spatial models more accessible to ecologists who have strong subject matter expertise but may lack sufficient statistical background or computational skills to implement them from scratch. One such advancement is the `spmodel` **R** package [@dumelle2023spmodel], which emulates base-**R** functions like `lm()` and `glm()` to account for spatial dependence via `splm()` and `spglm()`, respectively. Familiar **R** functions like `summary()` and `predict()` can be used directly on models fit via `spmodel`. Importantly, `spmodel` also has tools for spatial random forest residual modeling [@fox2020comparing], applications to large data of several thousand observations via spatial indexing [@ver2023indexing], and cross validation [@stone1974cross; @roberts2017cross].
 
-```{r}
-#| label: fig-time_since_flood1
-#| fig-cap: "Time since the flood against the squared reciprocal of time since the first flood."
-#| eval: false
-# dat_yr.flood1 <- dat %>%
-#   filter(yr.flood1 > 0) %>%
-#   mutate(yr.flood1 = seq(min(.$yr.flood1), max(.$yr.flood1), length.out = NROW(.))) %>%
-#   mutate(yr.flood1.recip2 = 1/yr.flood1^2)
-# ggplot(dat_yr.flood1, aes(x = yr.flood1, y = yr.flood1.recip2)) +
-#   geom_line() +
-#   labs(x = "Years Since Flood", y = expression("1/(Years Since Flood One)"^2)) +
-#   theme_bw(base_size = 12)
-```
 
-```{r}
-#| label: fig-cover_tidal_wb
-#| fig-cap: "Total seagrass cover in Wide Bay by tidal class and financial year. Boxplot width is proportional to the number of observations in each x-axis level (within financial year). The y-axis is truncated at 20, though a few observations have higher total seagrass cover."
-#| eval: false
-# dat_tidal <- dat %>%
-#   mutate(depth.range = case_when(
-#     depth.range == "Deep subtidal (>2m)" ~ "DSt",
-#     depth.range == "Shallow subtidal (0-2m)" ~ "SSt",
-#     depth.range == "Intertidal" ~ "Int",    
-#   )) %>%
-#   mutate(depth.range = factor(depth.range, levels = c("Int", "SSt", "DSt")))
-# ggplot(dat_tidal, aes(x = depth.range, y = total.cover)) +
-#   geom_boxplot(varwidth = TRUE, size = 0.5) +
-#   facet_wrap(~ fy) + 
-#   labs(x = "Tidal Class", y = "Total Cover") +
-#   coord_cartesian(ylim = c(0, 20)) +
-#   theme_bw(base_size = 14) +
-#   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
-```
+::: {.cell}
 
-```{r}
-#| label: fig-cover_turb_wb
-#| fig-cap: "Total seagrass cover in Wide Bay by turbidity class (whether exceeding 0.5 NTU) and financial year. Generally, increased turbidity has little effect on median total cover. Boxplot width is proportional to the number of observations in each x-axis level (within financial year). The y-axis is truncated at 20, though a few observations have higher total seagrass cover."
-#| eval: false
-# dat_turb <- dat %>%
-#   mutate(exceed_0.5 = factor(if_else(turb.90d.mn > 0.5, "Yes", "No"), levels = c("Yes", "No")))
-# ggplot(dat_turb, aes(x = exceed_0.5, y = total.cover)) +
-#   geom_boxplot(varwidth = TRUE, size = 0.5) +
-#   facet_wrap(~ fy) + 
-#   labs(x = "Exceeds 0.5 NTU", y = "Total Cover") +
-#   coord_cartesian(ylim = c(0, 20)) +
-#   theme_bw(base_size = 14)
-```
+:::
+
+
+
+::: {.cell}
+
+:::
+
+
+
+::: {.cell}
+
+:::
+

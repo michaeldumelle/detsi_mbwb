@@ -1,5 +1,5 @@
 ---
-title: "Moreton Bay Seagrass Resilience Modelling"
+title: "Moreton Bay Seagrass Resilience Modeling"
 subtitle: "DRFA 21/22 Biodiversity Conservation Marine Final Report Project"
 author:
   - name: Michael Dumelle (Dumelle Consulting)
@@ -62,10 +62,7 @@ Over the past few decades, various scientific studies have informed our current 
 
 
 # Seagrass Cover Model
-
-## Methods
-
-### Data
+## Data
 
 ```{r}
 #| label: read-mb
@@ -200,7 +197,7 @@ ggplot(dat) +
 
 
 
-### Exploratory Analyses
+## Exploratory Analyses
 
 Extensive exploratory analyses were undertaken to 1) understand the data structure, 2) visualize spatial and temporal patterns in the data, 3) identify outliers/errors, 4) examine correlations between potential covariates and the seagrass cover, as well as multicollinearity among covariates, 5) compare the fit of various models, and 6) evaluate model assumptions.
 
@@ -208,11 +205,11 @@ Results revealed substantial collinearity among ambient and flood-related water-
 
 The final set of potential covariates considered in the modelling included mean turbidity in the 90 days prior to sampling, mean turbidity during the flood event, mean temperature in the 90 days prior to sampling, sediment type, tidal range, years since flood, and EHMP subzone. 
 
-### Statistical Modeling {#sec-mb_model}
+## Statistical Modeling {#sec-mb_model}
 
 We considered multiple modeling approaches in this study, which each accounted for the data distribution, nonlinear relationships between seagrass cover and covariates, and spatial dependence inherent in biological data collected through space and time to different degrees (Appendix 1). We used the full set of potential covariates to fit a nonspatial linear model, spatial linear model (i.e., spatial model), spatial beta regression model, spatial gamma regression model, and a random forest model, comparing the model fit of each.
 
-There were several reasons for fitting these initial models. The nonspatial linear model provided a useful baseline to compare the spatial linear model against, elucidating the impact of spatial dependence on model fit. The spatial beta regression model is a generalized linear model used to characterize bounded proportional data ranging between zero and one. To adhere to this restriction, total seagrass cover was 1) scaled to a proportion and 2) if exactly zero or one, set to 0.01 or 0.99, respectively. The spatial gamma regression model is a generalized linear model used to characterize skewed positive data. To adhere to this restriction, a value of 0.01 was added to seagrass cover observations that were equal to zero. Finally, the random forest model provided a useful assessment of a machine learning approach, which requires fewer distributional assumptions than the aforementioned statistical approaches and more naturally describes nonlinear relationships between variables (Appendix 1). We also characterized random forest effects using partial dependence plots [@greenwell2017pdp], which isolate the marginal contribution of a variable while holding other variables at their observed values. Out-of-sample predictions were generated for the four statistical models using leave-one-out cxross validation, while out-of-bag validation was used for the random forest model. These out-of-sample predictions were then used to calculate the mean bias (MBias) and root-mean-square-prediction error (RMSPE) for each model. 
+There were several reasons for fitting these initial models. The nonspatial linear model provided a useful baseline to compare the spatial linear model against, elucidating the impact of spatial dependence on model fit. The spatial beta regression model is a generalized linear model used to characterize bounded proportional data ranging between zero and one. To adhere to this restriction, total seagrass cover was 1) scaled to a proportion and 2) if exactly zero or one, set to 0.01 or 0.99, respectively. The spatial gamma regression model is a generalized linear model used to characterize skewed positive data. To adhere to this restriction, a value of 0.01 was added to seagrass cover observations that were equal to zero. Finally, the random forest model provided a useful assessment of a machine learning approach, which requires fewer distributional assumptions than the aforementioned statistical approaches and more naturally describes nonlinear relationships between variables (Appendix 1). We also characterized random forest effects using partial dependence plots [@greenwell2017pdp], which isolate the marginal contribution of a variable while holding other variables at their observed values. Out-of-sample predictions were generated for the four statistical models using leave-one-out cross validation, while out-of-bag validation was used for the random forest model. These out-of-sample predictions were then used to calculate the mean bias (MBias) and root-mean-square-prediction error (RMSPE) for each model. 
 
 ```{r}
 mb_tc_lm_loocv <- readRDS(here("models", "mb_tc_lm_loocv.rds"))
@@ -375,7 +372,7 @@ mb_tc_splm_mod %>%
 
 ```
 
-### Block Kriging
+## Block Kriging
 
 A tremendous benefit of using the spatial linear model is that block Kriging [@ver2002sampling; @cressie2006block] can be used to predict the mean total seagrass cover bay-wide for any combination of covariates and geographic regions, even if these variables were not directly used in the model (see Appendix 1 for additional details). Block Kriging was undertaken, by financial year, for EHMP subzone, Marine Park zone, tidal range and for the whole of Moreton Bay.  
 
@@ -447,9 +444,7 @@ ggplot(bk_mb_all, aes(x = fy, y = fit)) +
 
 The seagrass cover model quantifies bay-wide effects of influential drivers on seagrass cover and enables assessment of recovery trajectories at management-relevant scales. However, it does not quantify site-specific resilience. @gilby2023drivers propose identifying hotspots (i.e., brightspots, sites performing better than expected) and coldspots (sites performing worse than expected) based on model residuals exceeding confidence interval bounds. They argue that hotspots and coldspots offer significant utility for understanding drivers of site-specific resilience and informing management decisions. @gilby2023drivers primarily focused on specific hotspots, linking environmental variables to those sites. We build on that work by using the seagrass model residuals as a proxy for site-specific resilience, and then characterizing the most important drivers of that resilience.
 
-## Methods
-
-### Data
+## Data
 
 We used the raw seagrass model residuals (@fig-resid_fy_mb) as a the response variable in a second spatial linear model used to study site-specific resilience in Moreton Bay. Model covariates included variables describing seagrass richness and dominant species, and bathymetry, as well as distance to the nearest coral, seagrass, mangrove, or gastropod habitat, and the total area in msq of coral, seagrass, mangrove, or gastropod habitat within 500 m of the observation point (@tbl-res_vars_mb). EHMP subzone was again included as a random effect. Because we were interested in hypothesis testing rather than parsimony, we included all potential covariates as fixed effects in the model. Potential covariates have the following structure:
 
@@ -510,7 +505,7 @@ res_vars %>%
 
 ```
 
-### Statistical Modeling
+## Statistical Modeling
 
 ```{r}
 #| label: tbl-mb-res-fixed
