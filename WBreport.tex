@@ -873,6 +873,10 @@ the model. Potential covariates have the following structure:
   seagrass observation point, excluding terrestrial areas, and is
   numeric from -30.58 m to 0.25 m.
 \item
+  Bathymetry Mean Curvature is the GRB mean curvature within 500 m of
+  the seagrass observation point, excluding terrestrial areas, and is
+  numeric from -0.001 to 0.001.
+\item
   Bathymetry Mean Slope is the GBR mean slope within 500 m of the
   seagrass observation point, excluding terrestrial areas, and is
   numeric from 0.004 degrees to 3.93 degrees.
@@ -927,6 +931,7 @@ Coral Habitat Total Area & Fixed & 2 \\
   Habitat Count & Fixed & 2 \\ 
   Dominant Species & Fixed & NA \\ 
   Bathymetry Mean Depth & Fixed & 2 \\ 
+  Bathymetry Mean Curvature & Fixed & 2 \\ 
   Bathymetry Mean Slope & Fixed & 2 \\ 
   Zone Class & Random & NA \\ 
    \bottomrule
@@ -950,32 +955,34 @@ the Wide Bay resilience model.}
   \toprule
 Term & Estimate & z & p.value \\ 
   \midrule
-Intercept (Absent) & -1.186 & -0.536 & 0.592 \\ 
-  HD & -1.321 & -1.926 & 0.054 \\ 
-  HO & -1.659 & -2.161 & 0.031 \\ 
-  HS & 1.431 & 1.899 & 0.058 \\ 
-  ZMHU & -2.279 & -4.849 & 0.000 \\ 
-  Species Richness & 5.244 & 15.452 & 0.000 \\ 
-  Coral Area Deg1 & 0.750 & 0.303 & 0.762 \\ 
-  Coral Area Deg2 & -0.181 & -0.062 & 0.951 \\ 
-  Seagrass Area Deg1 & -0.766 & -0.997 & 0.319 \\ 
-  Seagrass Area Deg2 & 0.402 & 0.766 & 0.444 \\ 
-  Mangrove Area Deg1 & 0.926 & 0.475 & 0.635 \\ 
-  Mangrove Area Deg2 & -2.933 & -1.052 & 0.293 \\ 
-  Habitat Count Deg1 & -0.147 & -0.167 & 0.867 \\ 
-  Habitat Count Deg2 & -0.093 & -0.112 & 0.911 \\ 
-  Coral Distance Deg1 & -5.110 & -4.151 & 0.000 \\ 
-  Coral Distance Deg2 & 11.500 & 7.084 & 0.000 \\ 
-  Seagrass Distance Deg1 & -1.023 & -0.499 & 0.618 \\ 
-  Seagrass Distance Deg2 & -0.917 & -0.437 & 0.662 \\ 
-  Mangrove Distance Deg1 & 1.543 & 0.898 & 0.369 \\ 
-  Mangrove Distance Deg2 & -2.186 & -1.287 & 0.198 \\ 
-  Gastropod Distance Deg1 & -1.909 & -0.926 & 0.354 \\ 
-  Gastropod Distance Deg2 & -2.665 & -1.776 & 0.076 \\ 
-  Bathymetry Mean Depth Deg1 & 1.509 & 0.628 & 0.530 \\ 
-  Bathymetry Mean Depth Deg2 & 1.215 & 0.636 & 0.525 \\ 
-  Bathymetry Mean Slope Deg1 & -1.246 & -0.835 & 0.404 \\ 
-  Bathymetry Mean Slope Deg2 & 0.945 & 0.347 & 0.729 \\ 
+Intercept (Absent) & -1.278 & -0.416 & 0.677 \\ 
+  HD & -1.329 & -1.936 & 0.053 \\ 
+  HO & -1.659 & -2.160 & 0.031 \\ 
+  HS & 1.427 & 1.893 & 0.058 \\ 
+  ZMHU & -2.274 & -4.833 & 0.000 \\ 
+  Species Richness & 5.245 & 15.449 & 0.000 \\ 
+  Coral Area Deg1 & 0.757 & 0.305 & 0.760 \\ 
+  Coral Area Deg2 & -0.167 & -0.057 & 0.954 \\ 
+  Seagrass Area Deg1 & -0.745 & -0.967 & 0.334 \\ 
+  Seagrass Area Deg2 & 0.408 & 0.774 & 0.439 \\ 
+  Mangrove Area Deg1 & 0.973 & 0.498 & 0.619 \\ 
+  Mangrove Area Deg2 & -2.951 & -1.058 & 0.290 \\ 
+  Habitat Count Deg1 & -0.146 & -0.166 & 0.868 \\ 
+  Habitat Count Deg2 & -0.143 & -0.169 & 0.866 \\ 
+  Coral Distance Deg1 & -5.142 & -4.164 & 0.000 \\ 
+  Coral Distance Deg2 & 11.490 & 7.074 & 0.000 \\ 
+  Seagrass Distance Deg1 & -0.996 & -0.485 & 0.628 \\ 
+  Seagrass Distance Deg2 & -0.922 & -0.440 & 0.660 \\ 
+  Mangrove Distance Deg1 & 1.532 & 0.885 & 0.376 \\ 
+  Mangrove Distance Deg2 & -2.174 & -1.279 & 0.201 \\ 
+  Gastropod Distance Deg1 & -1.897 & -0.919 & 0.358 \\ 
+  Gastropod Distance Deg2 & -2.619 & -1.747 & 0.081 \\ 
+  Bathymetry Mean Depth Deg1 & 1.630 & 0.669 & 0.503 \\ 
+  Bathymetry Mean Depth Deg2 & 1.192 & 0.621 & 0.535 \\ 
+  Bathymetry Mean Slope Deg1 & -1.434 & -0.894 & 0.371 \\ 
+  Bathymetry Mean Slope Deg2 & 0.920 & 0.264 & 0.792 \\ 
+  Bathymetry Mean Curvature Deg1 & 0.465 & 0.169 & 0.866 \\ 
+  Bathymetry Mean Curvature Deg2 & -0.014 & -0.007 & 0.994 \\ 
    \bottomrule
 \end{tabular}
 
@@ -1007,17 +1014,18 @@ Bay resilience model.}
   \toprule
 Effects & df & Chi-sq & p.value \\ 
   \midrule
-Dominant Species &    4 & 68.448 & 0.000 \\ 
-  Distance to Coral Habitat &    2 & 51.856 & 0.000 \\ 
-  Distance to Gastropod Habitat &    2 & 3.196 & 0.202 \\ 
-  Distance to Mangrove Habitat &    2 & 2.913 & 0.233 \\ 
-  Seagrass Habitat Total Area &    2 & 2.834 & 0.242 \\ 
-  Mangrove Habitat Total Area &    2 & 1.161 & 0.560 \\ 
-  Bathymetry Mean Slope &    2 & 0.699 & 0.705 \\ 
-  Distance to Seagrass Habitat &    2 & 0.551 & 0.759 \\ 
-  Bathymetry Mean Depth &    2 & 0.435 & 0.804 \\ 
-  Coral Habitat Total Area &    2 & 0.094 & 0.954 \\ 
-  Habitat Count &    2 & 0.042 & 0.979 \\ 
+Dominant Species &    4 & 68.011 & 0.000 \\ 
+  Distance to Coral Habitat &    2 & 51.788 & 0.000 \\ 
+  Distance to Gastropod Habitat &    2 & 3.089 & 0.213 \\ 
+  Distance to Mangrove Habitat &    2 & 2.866 & 0.239 \\ 
+  Seagrass Habitat Total Area &    2 & 2.752 & 0.253 \\ 
+  Mangrove Habitat Total Area &    2 & 1.163 & 0.559 \\ 
+  Bathymetry Mean Slope &    2 & 0.810 & 0.667 \\ 
+  Distance to Seagrass Habitat &    2 & 0.536 & 0.765 \\ 
+  Bathymetry Mean Depth &    2 & 0.466 & 0.792 \\ 
+  Bathymetry Mean Curvature &    2 & 0.119 & 0.942 \\ 
+  Coral Habitat Total Area &    2 & 0.096 & 0.953 \\ 
+  Habitat Count &    2 & 0.059 & 0.971 \\ 
    \bottomrule
 \end{tabular}
 
@@ -1059,9 +1067,10 @@ modeled variables).
 }
 
 \caption{\label{fig-wb_res_rich_coral}Average species richness (left)
-and distance to coral habitat (right) effects on resilience. Estimates
-(and confidence intervals) were evaluated at the means of all other
-numeric variables and for the ZMHU species in the Central zone.}
+and distance to coral habitat (right, for distances less than 10000 m)
+effects on resilience. Estimates (and confidence intervals) were
+evaluated at the means of all other numeric variables and for the ZMHU
+species in the Central zone.}
 
 \end{figure}%
 
@@ -1095,9 +1104,9 @@ random forest:
   Seagrass area was seventh-most important, with a general increasing
   trend in resilience with area.
 \item
-  The remaining variables (seagrass area, bathymetry slope, seagrass
-  distance, zone class, habitat count, mangrove area, and coral area)
-  had notable drop offs in performance.
+  The remaining variables (seagrass area, bathymetry slope, bathymetry
+  curvature, zone class, seagrass distance, habitat count, mangrove
+  area, and coral area) had notable drop offs in performance.
 \end{itemize}
 
 The consistency between the two resilience models' variable importance
@@ -1120,7 +1129,8 @@ which can affect variable importance measures \citep{fox2020comparing}.
 }
 
 \caption{\label{fig-rf_coral}Random forest partial dependence for total
-cover as a function of distance to coral habitat.}
+cover as a function of distance to coral habitat (for distances less
+than 10000 m).}
 
 \end{figure}%
 

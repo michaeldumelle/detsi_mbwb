@@ -126,7 +126,10 @@ dat <- dat %>%
   dplyr::select(c(seagrass.b, all_of(vars))) %>%
   na.omit() 
 
-dat2 <- read_xlsx(here("data", "WBsub_03-31-2026_covariate_data.xlsx"), sheet = "WBsub_compiled") %>%
+dat_curv <- read_xlsx(here("data", "WB_curvature.xlsx"))
+dat2 <- read_xlsx(here("data", "WBsub_03-31-2026_covariate_data.xlsx"), sheet = "WBsub_compiled")
+dat2 <- left_join(dat2 %>% select(-rcurv.dg.mean), dat_curv)
+dat2 <- dat2 %>%
   select(-fid, -date, -dom.spp)
 dat <- left_join(dat, dat2, by = "uniq.id")
 st_write(dat, here("data", "WBsub_03-31-2026.gpkg"))

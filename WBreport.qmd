@@ -439,6 +439,7 @@ We used the raw seagrass model residuals (@fig-resid_fy_wb) as a the response va
 * Species Richness is numeric (integer) from 0 to 4 unique species (possible species: "Absent", "HD", "HO", "HS", and "ZMHU").
 * Dominant Species represents the dominant seagrass species and has five levels: "Absent", "HD", "HO", "HS", and "ZMHU".
 * Bathymetry Mean Depth is the GBR mean depth within 500 m of the seagrass observation point, excluding terrestrial areas, and is numeric from -30.58 m to 0.25 m.
+* Bathymetry Mean Curvature is the GRB mean curvature within 500 m of the seagrass observation point, excluding terrestrial areas, and is numeric from -0.001 to 0.001.
 * Bathymetry Mean Slope is the GBR mean slope within 500 m of the seagrass observation point, excluding terrestrial areas, and is numeric from 0.004 degrees to 3.93 degrees.
 * Zone class has six categorical levels: Central, East, Great Sandy Strait, Hervey Bay, Southern, and Southwest. 
 
@@ -473,12 +474,12 @@ res_vars <- tibble(
               "Distance to Mangrove Habitat", "Distance to Gastropod Habitat",
               "Species Richness", "Habitat Count", "Dominant Species",
               "Bathymetry Mean Depth", 
-              #"Bathymetry Mean Curvature", 
+              "Bathymetry Mean Curvature", 
               "Bathymetry Mean Slope",
               "Zone Class"), 
-  Effect = c(rep("Fixed", 12), "Random"),
+  Effect = c(rep("Fixed", 13), "Random"),
   `Degree` = c(rep(2, 4), 2, 2, 2, 1, 2, "NA", 2, 
-               #2, 
+               2, 
                2, "NA")
 )
 res_vars %>%
@@ -508,8 +509,8 @@ wb_tc_splm_mod_res %>%
                   "Mangrove Distance Deg1", "Mangrove Distance Deg2",
                   "Gastropod Distance Deg1", "Gastropod Distance Deg2",
                   "Bathymetry Mean Depth Deg1", "Bathymetry Mean Depth Deg2",
-                  "Bathymetry Mean Slope Deg1", "Bathymetry Mean Slope Deg2"
-                  #"Bathymetry Mean Curvature Deg1", "Bathymetry Mean Curvature Deg2"
+                  "Bathymetry Mean Slope Deg1", "Bathymetry Mean Slope Deg2",
+                  "Bathymetry Mean Curvature Deg1", "Bathymetry Mean Curvature Deg2"
                   )) %>%
   select(-std.error) %>%
   rename(Term = term, Estimate = estimate, z = statistic, p.value = p.value) %>%
@@ -539,7 +540,7 @@ wb_tc_splm_mod_res %>%
                      "Bathymetry Mean Slope", 
                      "Distance to Seagrass Habitat",
                      "Bathymetry Mean Depth", 
-                     #"Bathymetry Mean Curvature", 
+                     "Bathymetry Mean Curvature", 
                      "Coral Habitat Total Area",
                      "Habitat Count")) %>%
   filter(!effects %in% c("Species Richness")) %>%
@@ -559,7 +560,7 @@ We found little evidence ($p$-value > 0.1) the remaining variables were associat
 
 ```{r}
 #| label: fig-wb_res_rich_coral
-#| fig-cap: "Average species richness (left) and distance to coral habitat (right) effects on resilience. Estimates (and confidence intervals) were evaluated at the means of all other numeric variables and for the ZMHU species in the Central zone."
+#| fig-cap: "Average species richness (left) and distance to coral habitat (right, for distances less than 10000 m) effects on resilience. Estimates (and confidence intervals) were evaluated at the means of all other numeric variables and for the ZMHU species in the Central zone."
 #| out-width: "80%"
 pred_grid <- tibble(
   dom.spp = "ZMHU",
@@ -588,7 +589,7 @@ pred_grid_sg.rich$sg.rich <- seq(0, 4, length.out = n_grid)
 pred_grid_sg.rich[, c("fit", "lwr", "upr")] <- predict(wb_tc_splm_mod_res, newdata = pred_grid_sg.rich, local = TRUE, interval = "confidence")
 
 pred_grid_coral.dist.m <- pred_grid[rep(1, n_grid), ]
-pred_grid_coral.dist.m$coral.dist.m <- seq(quantile(dat$coral.dist.m, 0.01), quantile(dat$coral.dist.m, 0.99), length.out = n_grid)
+pred_grid_coral.dist.m$coral.dist.m <- seq(quantile(dat$coral.dist.m, 0.0), quantile(dat$coral.dist.m, 0.75), length.out = n_grid)
 pred_grid_coral.dist.m[, c("fit", "lwr", "upr")] <- predict(wb_tc_splm_mod_res, newdata = pred_grid_coral.dist.m, local = TRUE, interval = "confidence")
 
 p1 <- ggplot(pred_grid_sg.rich, aes(x = sg.rich)) +
@@ -617,17 +618,17 @@ As mentioned previously, we also fit a random forest model to the seagrass model
 * Distance to gastropod habitat was fifth-most important, with a general decreasing trend in resilience with distance.
 * Distance to coral habitat was sixth-most important, with a similar quadratic trend (@fig-rf_coral) as in the spatial linear model.
 * Seagrass area was seventh-most important, with a general increasing trend in resilience with area.
-* The remaining variables (seagrass area, bathymetry slope, seagrass distance, zone class, habitat count, mangrove area, and coral area) had notable drop offs in performance.
+* The remaining variables (seagrass area, bathymetry slope, bathymetry curvature, zone class, seagrass distance, habitat count, mangrove area, and coral area) had notable drop offs in performance.
 
 The consistency between the two resilience models' variable importance rankings for species richness, dominant species, bathymetry mean depth, and distance to both gastropod and coral habitats reinforces the spatial linear model's identification of the most important drivers of resilience. However, the random forest identifies distance to mangrove habitat as the second most important variable, which is a questionable finding given the direction of the relationship. This counterintuitive result is likely a spurious correlation or an artifact of the random forest model's inability to account for spatial dependence in the data, which can affect variable importance measures [@fox2020comparing].
 
 
 ```{r}
 #| label: fig-rf_coral
-#| fig-cap: "Random forest partial dependence for total cover as a function of distance to coral habitat."
+#| fig-cap: "Random forest partial dependence for total cover as a function of distance to coral habitat (for distances less than 10000 m)."
 #| out-width: "50%"
 wb_tc_rf_mod_res <- readRDS(file = here("models", "wb_tc_rf_mod_res.rds"))
-pred.grid <- tibble(coral.dist.m = seq(quantile(dat$coral.dist.m, 0.01), quantile(dat$coral.dist.m, 0.99), length.out = 6))
+pred.grid <- tibble(coral.dist.m = seq(quantile(dat$coral.dist.m, 0.00), quantile(dat$coral.dist.m, 0.75), length.out = 6))
 pd <- partial(wb_tc_rf_mod_res, pred.var = "coral.dist.m", pred.grid = pred.grid) 
 p1 <- ggplot(pd, aes(x = coral.dist.m, y = yhat)) +
   geom_line(linewidth = 2) +

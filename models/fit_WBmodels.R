@@ -200,8 +200,9 @@ wb_tc_splm_form_res <- z_splm ~ dom.spp + sg.rich + bs(coral.msq, degree = 2) + 
   bs(mang.msq, degree = 2) + bs(hab.count, degre = 2) + 
   bs(coral.dist.m, degree = 2) + bs(seag.dist.m, degree = 2) +
   bs(mang.dist.m, degree = 2) + bs(shell.dist.m, degree = 2) +
-  bs(bath.m.mean, degree = 2) + bs(rslope.dg.mean, degree = 2)
-# rcurv, shell.msq removed due to collinearities
+  bs(bath.m.mean, degree = 2) + bs(rslope.dg.mean, degree = 2) +
+  bs(rcurv.dg.mean, degree = 2)
+# shell.msq removed because of having all zero values
 
 set.seed(0)
 wb_tc_splm_mod_res <- splm(
@@ -215,7 +216,7 @@ saveRDS(wb_tc_splm_mod_res, file = here("models", "wb_tc_splm_mod_res.rds"))
 
 wb_tc_rf_form_res <- z_splm ~ dom.spp + sg.rich + coral.msq + seagr.msq +
   mang.msq + hab.count + coral.dist.m + seag.dist.m +
-  mang.dist.m + shell.dist.m + bath.m.mean + rslope.dg.mean + zone.class
+  mang.dist.m + shell.dist.m + bath.m.mean + rslope.dg.mean + rcurv.dg.mean + zone.class
 set.seed(0)
 wb_tc_rf_mod_res <- ranger(
   formula = wb_tc_rf_form_res,
